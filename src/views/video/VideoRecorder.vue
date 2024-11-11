@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onUnmounted } from 'vue';
+import RecordRTC from 'recordrtc';
 
 const video = ref(null);
-let mediaRecorder = null;
+let recorder = null;
 const recordedChunks = ref([]);
 const recordedVideo = ref(null);
 const recordedVideoUrl = ref(null);
@@ -22,26 +23,26 @@ async function startRecording() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     video.value.srcObject = stream;
 
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        recordedChunks.value.push(event.data);
-      }
-    };
-    mediaRecorder.start();
+    // RecordRTC 인스턴스 생성
+    recorder = new RecordRTC(stream, {
+      type: 'video',
+      mimeType: 'video/webm',
+      disableLogs: true,
+    });
+    
+    recorder.startRecording();
   } catch (error) {
     console.error("카메라 접근 실패:", error);
   }
 }
 
 function stopRecording() {
-  mediaRecorder.stop();
-  mediaRecorder.onstop = () => {
-    const blob = new Blob(recordedChunks.value, { type: "video/webm" });
-    recordedVideo.value = blob;
-    recordedVideoUrl.value = URL.createObjectURL(blob);
+  recorder.stopRecording(() => {
+    // Blob으로 변환 후 비디오 URL 생성
+    recordedVideo.value = recorder.getBlob();
+    recordedVideoUrl.value = URL.createObjectURL(recordedVideo.value);
     recordedChunks.value = [];
-  };
+  });
 }
 
 async function uploadVideo() {
@@ -60,8 +61,8 @@ async function uploadVideo() {
 }
 
 onUnmounted(() => {
-  if (mediaRecorder) {
-    mediaRecorder.stop();
+  if (recorder) {
+    recorder.destroy();
   }
 });
 </script>
