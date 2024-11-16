@@ -95,6 +95,7 @@ class AuthService {
 
     // OAuth 관련
     static getKakaoLoginUrl() {
+      console.log(`요청 url ${API_URL}/oauth2/authorization/kakao`);
       return `${API_URL}/oauth2/authorization/kakao`;
     }
   }
