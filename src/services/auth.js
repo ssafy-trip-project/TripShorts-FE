@@ -1,8 +1,5 @@
 // src/services/auth.js
-const isDevelopment = import.meta.env.MODE === 'development';
-const API_URL = isDevelopment 
-  ? 'http://localhost:8080' 
-  : import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 class AuthService {
     // 쿠키 관련 유틸리티 함수
