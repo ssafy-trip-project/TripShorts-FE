@@ -19,8 +19,8 @@ const router = createRouter({
       component: Login
     },
     {
-      path: '/login/oauth2/code/kakao',
-      name: 'oauth-callback',
+      path: '/oauth/callback/kakao',
+      name: 'kakao-callback',
       component: OAuthCallback
     }
   ]

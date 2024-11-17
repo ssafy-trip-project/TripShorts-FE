@@ -1,103 +1,89 @@
 // src/services/auth.js
 const API_URL = import.meta.env.VITE_API_URL;
+const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
+const KAKAO_REDIRECT_URI = `${window.location.origin}/oauth/callback/kakao`;
 
 class AuthService {
-    // 쿠키 관련 유틸리티 함수
-    static getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return null;
-    }
-  
-    static setCookie(name, value, days = 7) {
-      const date = new Date();
-      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-      const expires = `expires=${date.toUTCString()}`;
-      
-      // CloudFront 도메인 사용시
-      if (window.location.hostname.includes('cloudfront.net')) {
-        document.cookie = `${name}=${value}; ${expires}; path=/; domain=.cloudfront.net; secure; samesite=strict`;
-      } else {
-        document.cookie = `${name}=${value}; ${expires}; path=/`;
+  // 토큰 관련 메서드
+  static getAccessToken() {
+      return localStorage.getItem('accessToken');
+  }
+
+  static getRefreshToken() {
+    return localStorage.getItem('refreshToken');
+  }
+
+  static setTokens(accessToken) {
+      localStorage.setItem('accessToken', accessToken);
+  }
+
+  static removeTokens() {
+      localStorage.removeItem('accessToken');
+  }
+
+  // 카카오 로그인 관련 메서드
+  static getKakaoLoginUrl() {
+    const scope = 'profile_nickname,profile_image,account_email';
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code&scope=${scope}`;
+    return kakaoAuthUrl;
+  }
+
+  static async handleKakaoCallback(code) {
+      try {
+          const response = await fetch(`${API_URL}/api/auth/kakao`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ code }),
+          });
+
+          if (!response.ok) {
+              throw new Error('Failed to authenticate with Kakao');
+          }
+
+          const data = await response.json();
+          if (data.accessToken) {
+              this.setTokens(data.accessToken);
+          }
+          
+          return data;
+      } catch (error) {
+          console.error('Kakao authentication error:', error);
+          throw error;
       }
-    }
-  
-    static removeCookie(name) {
-      if (window.location.hostname.includes('cloudfront.net')) {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.cloudfront.net;`;
-      } else {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      }
-    }
-  
-    // 토큰 관리
-    static getAccessToken() {
-      return this.getCookie('accessToken');
-    }
-  
-    static getRefreshToken() {
-      return this.getCookie('refreshToken');
-    }
-  
-    static setTokens(accessToken, refreshToken) {
-      this.setCookie('accessToken', accessToken);
-      this.setCookie('refreshToken', refreshToken);
-    }
-  
-    static removeTokens() {
-      this.removeCookie('accessToken');
-      this.removeCookie('refreshToken');
-    }
-  
-    // API 요청
-    static async getUserInfo() {
+  }
+
+  // 사용자 정보 조회
+  static async getUserInfo() {
       const accessToken = this.getAccessToken();
       if (!accessToken) {
-        throw new Error('No access token found');
+          throw new Error('No access token found');
       }
-  
+
       try {
-        const response = await fetch(`${API_URL}/api/user`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
-  
-        if (!response.ok) {
-          throw new Error('Failed to get user info');
-        }
-  
-        return await response.json();
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-        throw error;
-      }
-    }
-  
-    static async logout() {
-      const accessToken = this.getAccessToken();
-      if (accessToken) {
-        try {
-          await fetch(`${API_URL}/api/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`
-            }
+          const response = await fetch(`${API_URL}/api/auth/member`, {
+              headers: {
+                  'Authorization': `Bearer ${accessToken}`
+              }
           });
-        } catch (error) {
-          console.error('Logout request failed:', error);
-        }
+
+          if (!response.ok) {
+              throw new Error('Failed to get user info');
+          }
+
+          return await response.json();
+      } catch (error) {
+          console.error('Error fetching user info:', error);
+          throw error;
       }
-
-      this.removeTokens();
-    }
-
-    // OAuth 관련
-    static getKakaoLoginUrl() {
-      console.log(`요청 url ${API_URL}/oauth2/authorization/kakao`);
-      return `${API_URL}/oauth2/authorization/kakao`;
-    }
   }
+
+  // 로그아웃
+  static logout() {
+      this.removeTokens();
+      window.location.href = '/login';
+  }
+}
   
-  export default AuthService;
+export default AuthService;
