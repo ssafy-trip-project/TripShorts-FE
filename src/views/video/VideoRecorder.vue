@@ -16,6 +16,11 @@ const recording = ref(false);
 const error = ref(null);
 const showPreview = ref(false);
 
+//
+const thumbnailUrl = ref(null);
+const thumbnailBlob = ref(null);
+//
+
 // MIME 타입 체크 함수
 function getSupportedMimeType() {
   const types = [
@@ -114,25 +119,33 @@ async function startRecording() {
 async function stopRecording() {
   return new Promise((resolve) => {
     if (recorder) {
-      recorder.stopRecording(() => {
+      recorder.stopRecording(async () => {
         const blob = recorder.getBlob();
-        
-        // Safari에서 MP4로 변환이 필요한 경우
-        if (blob.type.includes('webm') && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
-          // webm을 mp4로 변환하는 로직을 추가할 수 있습니다
-          // 여기서는 직접 변환하지 않고 원본 사용
-        }
-
         recordedVideo.value = blob;
         
-        // 이전 URL 해제
         if (recordedVideoUrl.value) {
           URL.revokeObjectURL(recordedVideoUrl.value);
         }
         
         recordedVideoUrl.value = URL.createObjectURL(blob);
 
-        // 스트림 정리
+        // 썸네일 생성을 위한 임시 비디오 엘리먼트
+        const tempVideo = document.createElement('video');
+        tempVideo.src = recordedVideoUrl.value;
+        
+        // 비디오 메타데이터가 로드될 때까지 기다림
+        await new Promise(resolve => {
+          tempVideo.onloadedmetadata = () => {
+            // 비디오를 특정 시간으로 이동
+            tempVideo.currentTime = 1; // 1초 지점의 프레임을 사용
+            tempVideo.onseeked = resolve;
+          };
+        });
+
+        // 비디오 프레임이 준비되면 썸네일 생성
+        await generateThumbnail(tempVideo);
+        tempVideo.remove();
+        
         if (stream) {
           stream.getTracks().forEach(track => track.stop());
         }
@@ -142,6 +155,30 @@ async function stopRecording() {
     } else {
       resolve();
     }
+  });
+}
+
+// 썸네일 생성 함수 수정
+async function generateThumbnail(videoElement) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    // 썸네일 크기를 비디오 크기에 맞춤
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    // 비디오 프레임을 캔버스에 그림
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    
+    // 캔버스를 Blob으로 변환
+    canvas.toBlob((blob) => {
+      if (thumbnailUrl.value) {
+        URL.revokeObjectURL(thumbnailUrl.value);
+      }
+      thumbnailBlob.value = blob;
+      thumbnailUrl.value = URL.createObjectURL(blob);
+      resolve();
+    }, 'image/jpeg', 0.85); // JPEG 품질 85%
   });
 }
 
@@ -162,6 +199,14 @@ async function uploadVideo() {
     });
     console.log('PreSigned URL 요청:', presignedData);
 
+    // 2. 썸네일용 PreSigned URL 받기
+    const { data: thumbnailPresignedData } = await api.get('/api/v1/shorts/presigned-url', {
+      params: {
+        filename: 'thumbnail.jpg',
+        contentType: 'image/jpeg'
+      }
+    });
+
     console.log(recordedVideo.value.type)
     // 2. S3에 업로드 
     await api.put(presignedData.presignedUrl, recordedVideo.value, {
@@ -170,12 +215,22 @@ async function uploadVideo() {
       }
     });
 
+    // 썸네일 업로드
+    await api.put(thumbnailPresignedData.presignedUrl, thumbnailBlob.value, {
+      headers: {
+        'Content-Type': 'image/jpeg'
+      }
+    });
+
     // 3. Shorts 생성
     await api.post('/api/v1/shorts', {
       videoUrl: `https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${presignedData.filename}`,
+      thumbnailUrl: `https://d3sspkhgtlkiph.cloudfront.net/images/shorts/${thumbnailPresignedData.filename}`,
       originalFileName: presignedData.filename,
       description: ''
     });
+
+    
 
     alert('업로드 성공!');
   } catch (error) {
@@ -253,6 +308,13 @@ onUnmounted(() => {
         playsinline
         class="preview-video"
       ></video>
+
+      <img 
+          v-if="thumbnailUrl" 
+          :src="thumbnailUrl" 
+          class="preview-thumbnail" 
+          alt="영상 썸네일"
+        />
 
       <div class="preview-controls">
         <v-text-field
@@ -355,6 +417,14 @@ onUnmounted(() => {
   max-width: 90%;
   max-height: 70vh;
   margin-bottom: 20px;
+}
+
+.preview-thumbnail {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+  border: 1px solid #333;
+  border-radius: 4px;
 }
 
 .preview-controls {
