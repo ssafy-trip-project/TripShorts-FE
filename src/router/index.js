@@ -3,6 +3,7 @@ import Main from '../views/Main.vue'
 import OAuthCallback from '../views/OAuthCallback.vue'
 import Login from '../views/Login.vue'
 import AuthService from '../services/auth'
+import VideoRecorder from '@/views/video/VideoRecorder.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,6 +23,12 @@ const router = createRouter({
       path: '/oauth/callback/kakao',
       name: 'kakao-callback',
       component: OAuthCallback
+    },
+    {
+      path: '/upload',
+      name: 'upload',
+      component: VideoRecorder,
+      meta: { requiresAuth: true }
     }
   ]
 })

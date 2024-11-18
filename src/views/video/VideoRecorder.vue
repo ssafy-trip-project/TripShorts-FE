@@ -1,13 +1,20 @@
 <script setup>
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, onMounted } from 'vue';
 import RecordRTC from 'recordrtc';
+import api from '@/api';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const video = ref(null);
+const description = ref('');
+const isLoading = ref(false);
 let recorder = null;
 let stream = null;
 const recordedVideo = ref(null);
 const recordedVideoUrl = ref(null);
 const recording = ref(false);
+const error = ref(null);
+const showPreview = ref(false);
 
 // MIME 타입 체크 함수
 function getSupportedMimeType() {
@@ -23,16 +30,44 @@ function getSupportedMimeType() {
       return type;
     }
   }
-  return 'video/webm'; // 기본값
+  return 'video/webm';
 }
 
-async function toggleRecording() {
-  if (!recording.value) {
-    await startRecording();
-  } else {
-    await stopRecording();
+onMounted(async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ 
+      video: {
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 30 }
+      }, 
+      audio: true 
+    });
+
+    if (video.value) {
+      video.value.srcObject = stream;
+      await video.value.play();
+    }
+  } catch (err) {
+    error.value = "카메라 접근에 실패했습니다. 카메라 권한을 확인해주세요.";
+    console.error(err);
   }
-  recording.value = !recording.value;
+});
+
+async function toggleRecording() {
+  try {
+    error.value = null;
+    if (!recording.value) {
+      await startRecording();
+    } else {
+      await stopRecording();
+      showPreview.value = true;
+    }
+    recording.value = !recording.value;
+  } catch (err) {
+    error.value = '녹화 중 오류가 발생했습니다.';
+    console.error(err);
+  }
 }
 
 async function startRecording() {
@@ -115,30 +150,46 @@ async function uploadVideo() {
     alert("녹화된 영상이 없습니다.");
     return;
   }
-
-  const formData = new FormData();
-  const fileExtension = recordedVideo.value.type.includes('mp4') ? 'mp4' : 'webm';
-  formData.append("video", recordedVideo.value, `video.${fileExtension}`);
-
+  console.log("여기까지는 들어와요")
   try {
-    const response = await fetch("/shorts/upload", {
-      method: "POST",
-      body: formData,
+    console.log("여기는 들어와요?")
+    // 1. PreSigned URL 받기
+    const { data: presignedData } = await api.get('/api/v1/shorts/presigned-url', {
+      params: {
+        filename: `video.${recordedVideo.value.type.includes('mp4') ? 'mp4' : 'webm'}`,
+        contentType: recordedVideo.value.type
+      }
     });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    alert("업로드 성공!");
+    console.log('PreSigned URL 요청:', presignedData);
+
+    console.log(recordedVideo.value.type)
+    // 2. S3에 업로드 
+    await api.put(presignedData.presignedUrl, recordedVideo.value, {
+      headers: {
+        'Content-Type': recordedVideo.value.type
+      }
+    });
+
+    // 3. Shorts 생성
+    await api.post('/api/v1/shorts', {
+      videoUrl: `https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${presignedData.filename}`,
+      originalFileName: presignedData.filename,
+      description: ''
+    });
+
+    alert('업로드 성공!');
   } catch (error) {
-    console.error("업로드 실패:", error);
-    alert("업로드 중 오류가 발생했습니다.");
+    console.error('업로드 실패:', error);
+    alert('업로드 중 오류가 발생했습니다.');
   }
 }
 
+
+function cancelRecording() {
+  router.push('/');  // 메인 페이지로 돌아가기
+}
+
 onUnmounted(() => {
-  // 정리 작업
   if (recorder) {
     recorder.destroy();
     recorder = null;
@@ -155,54 +206,182 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
-    <video 
-      ref="video" 
-      autoplay 
-      playsinline
-      muted
-      :style="{ maxWidth: '100%', width: '500px' }"
-    ></video>
-    
-    <div class="controls">
-      <button 
-        @click="toggleRecording"
-        :disabled="!video"
-      >
-        {{ recording ? '녹화 종료' : '녹화 시작' }}
-      </button>
-      
-      <button 
-        v-if="recordedVideo" 
-        @click="uploadVideo"
-        :disabled="recording"
-      >
-        업로드
-      </button>
+  <div class="recorder-fullscreen">
+    <!-- 에러 메시지 -->
+    <div v-if="error" class="error-message">
+      {{ error }}
     </div>
 
-    <video 
-      v-if="recordedVideoUrl" 
-      :src="recordedVideoUrl" 
-      controls 
-      playsinline
-      :style="{ maxWidth: '100%', width: '500px' }"
-    ></video>
+    <!-- 녹화 화면 -->
+    <div class="video-container" v-if="!showPreview">
+      <video 
+        ref="video" 
+        autoplay 
+        playsinline
+        muted
+        class="fullscreen-video"
+      ></video>
+
+      <!-- 오버레이 컨트롤 -->
+      <div class="overlay-controls">
+        <v-btn
+          @click="cancelRecording"
+          icon
+          class="close-btn"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+
+        <v-btn
+          @click="toggleRecording"
+          :color="recording ? 'error' : 'primary'"
+          rounded
+          class="record-btn"
+        >
+          <v-icon left>{{ recording ? 'mdi-stop' : 'mdi-record' }}</v-icon>
+          {{ recording ? '녹화 중지' : '녹화 시작' }}
+        </v-btn>
+      </div>
+    </div>
+
+    <!-- 미리보기 화면 -->
+    <div v-if="showPreview" class="preview-container">
+      <video 
+        v-if="recordedVideoUrl"
+        :src="recordedVideoUrl" 
+        controls 
+        playsinline
+        class="preview-video"
+      ></video>
+
+      <div class="preview-controls">
+        <v-text-field
+          v-model="description"
+          label="영상 설명"
+          outlined
+          class="description-input"
+        ></v-text-field>
+
+        <div class="button-group">
+          <v-btn
+            @click="uploadVideo"
+            :loading="isLoading"
+            color="primary"
+            class="mx-2"
+          >
+            업로드
+          </v-btn>
+
+          <v-btn
+            @click="showPreview = false"
+            text
+            class="mx-2"
+          >
+            다시 녹화
+          </v-btn>
+
+          <v-btn
+            @click="cancelRecording"
+            text
+            class="mx-2"
+          >
+            취소
+          </v-btn>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.controls {
-  margin: 15px 0;
+.recorder-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 1000;
 }
 
-button {
-  margin: 0 5px;
-  padding: 8px 16px;
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.fullscreen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay-controls {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+}
+
+.record-btn {
+  padding: 0 30px !important;
+  height: 50px !important;
+}
+
+.preview-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #121212;
+}
+
+.preview-video {
+  max-width: 90%;
+  max-height: 70vh;
+  margin-bottom: 20px;
+}
+
+.preview-controls {
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+}
+
+.description-input {
+  margin-bottom: 20px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.error-message {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(244, 67, 54, 0.9);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  z-index: 1001;
 }
 </style>
