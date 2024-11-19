@@ -201,7 +201,7 @@ async function uploadVideo() {
         contentType: recordedVideo.value.type,
       },
     });
-    console.log("PreSigned URL 요청:", presignedData);
+    console.log("video PreSigned URL Data:", presignedData);
 
     // 2. 썸네일용 PreSigned URL 받기
     const { data: thumbnailPresignedData } = await api.get("/api/v1/shorts/presigned-url", {
@@ -210,7 +210,7 @@ async function uploadVideo() {
         contentType: "image/jpeg",
       },
     });
-
+    console.log("Thumbnail presigned data : ", thumbnailPresignedData);
     console.log(recordedVideo.value.type);
     // 2. S3에 업로드
     await api.put(presignedData.presignedUrl, recordedVideo.value, {
@@ -228,11 +228,22 @@ async function uploadVideo() {
 
     const token = localStorage.getItem("accessToken");
     // 3. Shorts 생성
+    const getFilePathFromUrl = (url) => {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split("/");
+      return pathParts[pathParts.length - 1]; // 마지막 부분이 UUID-filename
+    };
+
+    // Shorts 생성
     await api.post(
       "/api/v1/shorts",
       {
-        videoUrl: `https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${presignedData.filename}`,
-        thumbnailUrl: `https://d3sspkhgtlkiph.cloudfront.net/images/shorts/${thumbnailPresignedData.filename}`,
+        videoUrl: `https://tripshorts-front.s3.ap-northeast-2.amazonaws.com/videos/shorts/${getFilePathFromUrl(
+          presignedData.presignedUrl
+        )}`,
+        thumbnailUrl: `https://tripshorts-front.s3.ap-northeast-2.amazonaws.com/images/shorts/${getFilePathFromUrl(
+          thumbnailPresignedData.presignedUrl
+        )}`,
       },
       {
         headers: {
