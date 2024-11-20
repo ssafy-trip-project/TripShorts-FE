@@ -125,6 +125,11 @@ const menuItems = ref([
     route: '/profile',
     mobileOnly: false
   },
+  {
+    title: "동영상 업로드",
+    icon: "mdi-upload",
+    route: "/upload",
+  },
   { 
     title: '내 동영상', 
     icon: 'mdi-video',
