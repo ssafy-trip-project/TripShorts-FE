@@ -241,7 +241,7 @@ async function uploadVideo() {
         videoUrl: `https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${getFilePathFromUrl(
           presignedData.presignedUrl
         )}`,
-        thumbnailUrl: ` https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${getFilePathFromUrl(
+        thumbnailUrl: `https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${getFilePathFromUrl(
           thumbnailPresignedData.presignedUrl
         )}`,
       },
