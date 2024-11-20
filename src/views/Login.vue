@@ -13,7 +13,7 @@
         </svg>
       </div>
 
-      <h1>지금 <span class="highlight">Trip 숏폼</span>과<br />함께 추억을 남겨보세요!</h1>
+      <h1>지금 <span class="highlight">Trip 숏츠</span>와<br />함께 추억을 남겨보세요!</h1>
 
       <v-btn
         color="#FEE500"
