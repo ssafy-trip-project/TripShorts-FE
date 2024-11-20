@@ -6,24 +6,24 @@ const KAKAO_REDIRECT_URI = `${window.location.origin}/oauth/callback/kakao`;
 class AuthService {
   // 토큰 관련 메서드
   static getAccessToken() {
-    return localStorage.getItem("accessToken");
+    return localStorage.getItem('accessToken');
   }
 
   static getRefreshToken() {
-    return localStorage.getItem("refreshToken");
+    return localStorage.getItem('refreshToken');
   }
 
   static setTokens(accessToken) {
-    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem('accessToken', accessToken);
   }
 
   static removeTokens() {
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem('accessToken');
   }
 
   // 카카오 로그인 관련 메서드
   static getKakaoLoginUrl() {
-    const scope = "profile_nickname,profile_image,account_email";
+    const scope = 'profile_nickname,profile_image,account_email';
     const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code&scope=${scope}`;
     return kakaoAuthUrl;
   }
@@ -31,15 +31,15 @@ class AuthService {
   static async handleKakaoCallback(code) {
     try {
       const response = await fetch(`${API_URL}/api/auth/kakao`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ code }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to authenticate with Kakao");
+        throw new Error('Failed to authenticate with Kakao');
       }
 
       const data = await response.json();
@@ -49,7 +49,7 @@ class AuthService {
 
       return data;
     } catch (error) {
-      console.error("Kakao authentication error:", error);
+      console.error('Kakao authentication error:', error);
       throw error;
     }
   }
@@ -58,7 +58,7 @@ class AuthService {
   static async getUserInfo() {
     const accessToken = this.getAccessToken();
     if (!accessToken) {
-      throw new Error("No access token found");
+      throw new Error('No access token found');
     }
 
     try {
@@ -69,12 +69,12 @@ class AuthService {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get user info");
+        throw new Error('Failed to get user info');
       }
 
       return await response.json();
     } catch (error) {
-      console.error("Error fetching user info:", error);
+      console.error('Error fetching user info:', error);
       throw error;
     }
   }
@@ -82,7 +82,7 @@ class AuthService {
   // 로그아웃
   static logout() {
     this.removeTokens();
-    window.location.href = "/login";
+    window.location.href = '/login';
   }
 }
 

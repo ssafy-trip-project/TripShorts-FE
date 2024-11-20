@@ -49,9 +49,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
-import axios from "axios";
-import api from "@/api";
+import { ref, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
+import api from '@/api';
 
 const videos = ref([]);
 const videoRefs = ref([]); // 비디오 엘리먼트 참조를 위한 ref
@@ -73,13 +73,13 @@ const handleVideoLoaded = (event, index) => {
 // Intersection Observer 설정
 const setupIntersectionObserver = () => {
   observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
+    entries => {
+      entries.forEach(entry => {
         const video = entry.target;
         if (entry.isIntersecting) {
           // 화면에 보이면 재생
-          video.play().catch((error) => {
-            console.log("Video play failed:", error);
+          video.play().catch(error => {
+            console.log('Video play failed:', error);
           });
         } else {
           // 화면에서 벗어나면 정지
@@ -89,7 +89,7 @@ const setupIntersectionObserver = () => {
     },
     {
       threshold: 0.6, // 60% 이상 보일 때 재생
-    }
+    },
   );
 };
 
@@ -98,10 +98,10 @@ const fetchVideos = async () => {
 
   try {
     loading.value = true;
-    console.log("Fetching videos...");
-    const token = localStorage.getItem("accessToken");
+    console.log('Fetching videos...');
+    const token = localStorage.getItem('accessToken');
     // presignedURL
-    const response = await api.get("/api/v1/shorts/feed", {
+    const response = await api.get('/api/v1/shorts/feed', {
       params: {
         cursorId: nextCursor.value,
         size: 5,
@@ -111,7 +111,7 @@ const fetchVideos = async () => {
       },
     });
 
-    console.log("Response:", response.data);
+    console.log('Response:', response.data);
 
     if (response.data && Array.isArray(response.data.videos)) {
       videos.value = [...videos.value, ...response.data.videos];
@@ -119,8 +119,8 @@ const fetchVideos = async () => {
       hasNext.value = response.data.hasNext;
     }
   } catch (error) {
-    console.error("Failed to fetch videos:", error);
-    console.log("Error details:", {
+    console.error('Failed to fetch videos:', error);
+    console.log('Error details:', {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status,
@@ -131,7 +131,7 @@ const fetchVideos = async () => {
 };
 
 // 스크롤 핸들러
-const handleScroll = async (event) => {
+const handleScroll = async event => {
   const container = event.target;
   const scrollPosition = container.scrollTop + container.clientHeight;
   const scrollHeight = container.scrollHeight;
@@ -142,11 +142,11 @@ const handleScroll = async (event) => {
 };
 
 // 비디오 재생/정지 토글
-const togglePlay = (event) => {
+const togglePlay = event => {
   const video = event.target;
   if (video.paused) {
-    video.play().catch((error) => {
-      console.log("Video play failed:", error);
+    video.play().catch(error => {
+      console.log('Video play failed:', error);
     });
   } else {
     video.pause();
@@ -154,25 +154,25 @@ const togglePlay = (event) => {
 };
 
 // 좋아요 토글
-const toggleLike = async (video) => {
+const toggleLike = async video => {
   try {
     video.liked = !video.liked;
     video.likeCount += video.liked ? 1 : -1;
     // TODO: API 연동
   } catch (error) {
-    console.error("Failed to toggle like:", error);
+    console.error('Failed to toggle like:', error);
   }
 };
 
 // 댓글 모달 열기
-const openComments = (video) => {
-  console.log("Opening comments for video:", video.id);
+const openComments = video => {
+  console.log('Opening comments for video:', video.id);
   // TODO: 댓글 모달 구현
 };
 
 // 상세 정보 모달 열기
-const openDetails = (video) => {
-  console.log("Opening details for video:", video.id);
+const openDetails = video => {
+  console.log('Opening details for video:', video.id);
   // TODO: 상세 정보 모달 구현
 };
 

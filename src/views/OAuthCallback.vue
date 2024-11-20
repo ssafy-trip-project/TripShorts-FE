@@ -9,13 +9,8 @@
           color="primary"
           size="64"
         ></v-progress-circular>
-        
-        <v-alert
-          v-if="error"
-          type="error"
-          class="mt-4"
-          variant="tonal"
-        >
+
+        <v-alert v-if="error" type="error" class="mt-4" variant="tonal">
           {{ errorMessage }}
           <v-btn
             class="mt-2"
@@ -36,12 +31,12 @@ import AuthService from '../services/auth';
 
 export default {
   name: 'OAuthCallback',
-  
+
   data() {
     return {
       loading: true,
       error: false,
-      errorMessage: ''
+      errorMessage: '',
     };
   },
 
@@ -69,11 +64,11 @@ export default {
 
       // 메인 페이지로 리다이렉트
       this.$router.push('/');
-      
     } catch (error) {
       console.error('OAuth 콜백 처리 에러:', error);
       this.error = true;
-      this.errorMessage = error.message || '로그인 처리 중 오류가 발생했습니다.';
+      this.errorMessage =
+        error.message || '로그인 처리 중 오류가 발생했습니다.';
     } finally {
       this.loading = false;
     }
@@ -82,8 +77,8 @@ export default {
   methods: {
     redirectToLogin() {
       this.$router.push('/login');
-    }
-  }
+    },
+  },
 };
 </script>
 
