@@ -66,17 +66,19 @@
             >
               <v-card class="video-card">
                 <v-img
-                  :src="video.thumbnail || '/api/placeholder/400/250'"
+                  :src="video.thumbnailUrl || '/api/placeholder/400/250'"
                   height="200"
                   cover
                 ></v-img>
-                <v-card-title class="d-flex align-center justify-center text-center pa-2">
-                  <span class="video-title">{{ video.title }}</span>
-                </v-card-title>
-                <v-card-subtitle class="d-flex align-center justify-center pb-2">
-                  <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
-                  <span class="likes-count">{{ video.likes }}K</span>
-                </v-card-subtitle>
+                <v-card-text class="d-flex align-center justify-space-between py-2">
+                  <span class="nickname">{{ video.nickname }}</span>
+                  <div class="d-flex align-center">
+                    <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
+                    <span class="likes-count">{{ video.likeCount }}</span>
+                  </div>
+                </v-card-text>
+
+                
               </v-card>
             </v-col>
           </v-row>
@@ -103,9 +105,24 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthService from '../services/auth'
+import VideoService from '../services/video'
 
 const router = useRouter()
 const activeTab = ref('home')
+const videos = ref([])
+
+// 비디오 데이터 가져오기
+const fetchVideos = async () => {
+  try {
+    const data = await VideoService.getVideos()
+    console.log(data)
+    videos.value = data
+  } catch (error) {
+    console.error('Failed to fetch videos:', error)
+  }
+}
+
+
 
 const userInfo = ref({
   email: '',
@@ -171,43 +188,11 @@ const categories = ref([
   "문화", "음식", "경치", "동물", "쇼핑", "기타"
 ])
 
-const videos = ref([
-  {
-    title: "멋진 여행지에서의 노을",
-    thumbnail: "",
-    likes: 10
-  },
-  {
-    title: "바다를 바라보며 힐링하기",
-    thumbnail: "",
-    likes: 30.4
-  },
-  {
-    title: "도시의 밤",
-    thumbnail: "",
-    likes: 78
-  },
-  {
-    title: "산책로의 아침",
-    thumbnail: "",
-    likes: 45
-  },
-  {
-    title: "카페에서의 여유",
-    thumbnail: "",
-    likes: 92
-  },
-  {
-    title: "공원의 봄",
-    thumbnail: "",
-    likes: 23
-  }
-])
-
 onMounted(async () => {
   try {
     const data = await AuthService.getUserInfo()
     userInfo.value = data
+    await fetchVideos() // 비디오 데이터 가져오기
   } catch (error) {
     console.error('Failed to get user info:', error)
     router.push('/login')
@@ -278,16 +263,16 @@ const handleLogout = async () => {
   transform: scale(1.02);
 }
 
-.video-title {
-  font-size: 1rem;
-  color: #8B4513;
-  line-height: 1.2;
-}
-
 .likes-count {
   color: #8B4513;
   font-size: 0.9rem;
   margin-left: 4px;
+}
+
+.nickname{
+  color: #8B4513;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .mobile-nav {
