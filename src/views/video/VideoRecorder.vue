@@ -238,10 +238,10 @@ async function uploadVideo() {
     await api.post(
       "/api/v1/shorts",
       {
-        videoUrl: `https://tripshorts-front.s3.ap-northeast-2.amazonaws.com/videos/shorts/${getFilePathFromUrl(
+        videoUrl: `https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${getFilePathFromUrl(
           presignedData.presignedUrl
         )}`,
-        thumbnailUrl: `https://tripshorts-front.s3.ap-northeast-2.amazonaws.com/images/shorts/${getFilePathFromUrl(
+        thumbnailUrl: ` https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${getFilePathFromUrl(
           thumbnailPresignedData.presignedUrl
         )}`,
       },
