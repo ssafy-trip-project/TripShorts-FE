@@ -56,7 +56,6 @@
           </v-row>
 
           <!-- 비디오 그리드 -->
-          <!-- 비디오 그리드 -->
           <v-row>
             <v-col
               v-for="(video, index) in videos"
@@ -71,10 +70,15 @@
                   height="200"
                   cover
                 ></v-img>
-                <v-card-subtitle class="d-flex align-center justify-center py-2">
-                  <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
-                  <span class="likes-count">{{ video.likeCount }}</span>
-                </v-card-subtitle>
+                <v-card-text class="d-flex align-center justify-space-between py-2">
+                  <span class="nickname">{{ video.nickname }}</span>
+                  <div class="d-flex align-center">
+                    <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
+                    <span class="likes-count">{{ video.likeCount }}</span>
+                  </div>
+                </v-card-text>
+
+                
               </v-card>
             </v-col>
           </v-row>
@@ -259,16 +263,16 @@ const handleLogout = async () => {
   transform: scale(1.02);
 }
 
-.video-title {
-  font-size: 1rem;
-  color: #8B4513;
-  line-height: 1.2;
-}
-
 .likes-count {
   color: #8B4513;
   font-size: 0.9rem;
   margin-left: 4px;
+}
+
+.nickname{
+  color: #8B4513;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .mobile-nav {
