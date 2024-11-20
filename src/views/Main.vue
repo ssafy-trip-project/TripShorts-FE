@@ -4,9 +4,7 @@
       <!-- 왼쪽 메뉴 섹션 -->
       <v-col cols="12" md="3">
         <v-card class="welcome-card mb-4">
-          <v-card-title class="text-center headline">
-            환영합니다!
-          </v-card-title>
+          <v-card-title class="text-center headline"> 환영합니다! </v-card-title>
           <v-card-text class="text-center">
             <h2 class="user-name">{{ userInfo.nickname }}님</h2>
           </v-card-text>
@@ -46,11 +44,7 @@
         <v-row class="mb-4">
           <v-col cols="12" class="d-flex justify-center">
             <v-chip-group show-arrows>
-              <v-chip
-                v-for="category in categories"
-                :key="category"
-                outlined
-              >
+              <v-chip v-for="category in categories" :key="category" outlined>
                 {{ category }}
               </v-chip>
             </v-chip-group>
@@ -59,18 +53,9 @@
 
         <!-- 숏츠 카드 그리드 -->
         <v-row>
-          <v-col
-            v-for="(video, index) in videos"
-            :key="index"
-            cols="12"
-            sm="6"
-            lg="4"
-          >
+          <v-col v-for="(video, index) in videos" :key="index" cols="12" sm="6" lg="4">
             <v-card class="video-card">
-              <v-img
-                :src="video.thumbnail || '/api/placeholder/400/250'"
-                height="250px"
-              ></v-img>
+              <v-img :src="video.thumbnail || '/api/placeholder/400/250'" height="250px"></v-img>
               <v-card-title class="d-flex align-center justify-center text-center">
                 <span>{{ video.title }}</span>
               </v-card-title>
@@ -87,96 +72,110 @@
 </template>
 
 <script>
-import AuthService from '../services/auth'
+import AuthService from "../services/auth";
 
 export default {
-  name: 'Main',
+  name: "Main",
   data() {
     return {
       userInfo: {
-        email: '',
-        nickname: ''
+        email: "",
+        nickname: "",
       },
       menus: [
-        { 
-          title: '홈', 
-          icon: 'mdi-home',
-          route: '/'
+        {
+          title: "홈",
+          icon: "mdi-home",
+          route: "/",
         },
-        { 
-          title: '프로필', 
-          icon: 'mdi-account',
-          route: '/profile'
+        {
+          title: "프로필",
+          icon: "mdi-account",
+          route: "/profile",
         },
-        { 
-          title: '내 동영상', 
-          icon: 'mdi-video',
-          route: '/my-videos'
+        {
+          title: "내 동영상",
+          icon: "mdi-video",
+          route: "/my-videos",
         },
-        { 
-          title: '새 동영상 업로드', 
-          icon: 'mdi-upload',
-          route: '/upload'
-        }
+        {
+          title: "새 동영상 업로드",
+          icon: "mdi-upload",
+          route: "/upload",
+        },
+        {
+          title: "쇼츠 테스트",
+          icon: "mdi-video",
+          route: "/videos",
+        },
       ],
       categories: [
-        "모두", "노을이 멋진 곳", "여행지", "힐링스팟", "일상생활", 
-        "문화", "음식", "경치", "동물", "쇼핑", "기타"
+        "모두",
+        "노을이 멋진 곳",
+        "여행지",
+        "힐링스팟",
+        "일상생활",
+        "문화",
+        "음식",
+        "경치",
+        "동물",
+        "쇼핑",
+        "기타",
       ],
       videos: [
         {
           title: "멋진 여행지에서의 노을",
           thumbnail: "",
-          likes: 10
+          likes: 10,
         },
         {
           title: "바다를 바라보며 힐링하기",
           thumbnail: "",
-          likes: 30.4
+          likes: 30.4,
         },
         {
           title: "도시의 밤",
           thumbnail: "",
-          likes: 78
+          likes: 78,
         },
         {
           title: "산책로의 아침",
           thumbnail: "",
-          likes: 45
+          likes: 45,
         },
         {
           title: "카페에서의 여유",
           thumbnail: "",
-          likes: 92
+          likes: 92,
         },
         {
           title: "공원의 봄",
           thumbnail: "",
-          likes: 23
-        }
-      ]
-    }
+          likes: 23,
+        },
+      ],
+    };
   },
   async created() {
     try {
       const data = await AuthService.getUserInfo();
       this.userInfo = data;
     } catch (error) {
-      console.error('Failed to get user info:', error);
-      this.$router.push('/login');
+      console.error("Failed to get user info:", error);
+      this.$router.push("/login");
     }
   },
   methods: {
     async handleLogout() {
       try {
         await AuthService.logout();
-        this.$router.push('/login');
+        this.$router.push("/login");
       } catch (error) {
-        console.error('Logout failed:', error);
+        console.error("Logout failed:", error);
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
