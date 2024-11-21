@@ -51,6 +51,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import {useRouter} from "vue-router"
 import axios from 'axios';
 import api from '@/api';
 
@@ -60,6 +61,8 @@ const loading = ref(false);
 const nextCursor = ref(null);
 const hasNext = ref(true);
 let observer = null;
+
+const router = useRouter()
 
 // 비디오 로드 완료 핸들러
 const handleVideoLoaded = (event, index) => {
