@@ -48,6 +48,11 @@ const router = createRouter({
       name: 'regist-tour',
       component: TourInfo,
     },
+    {
+      path: '/video/detail',
+      name: 'VideoDetail',
+      component: VideoDetail
+    }
   ],
 });
 

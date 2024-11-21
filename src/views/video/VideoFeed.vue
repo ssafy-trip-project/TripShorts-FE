@@ -31,8 +31,9 @@
           </button>
         </div>
         <div class="action-item">
-          <button class="action-button" @click="openDetails(video)">
+          <button class="action-button info-button" @click="openDetails(video)">
             <i class="fas fa-info-circle"></i>
+            <span class="info-tooltip">상세정보</span>
           </button>
         </div>
       </div>
@@ -174,6 +175,10 @@ const openComments = video => {
 const openDetails = video => {
   console.log('Opening details for video:', video.id);
   // TODO: 상세 정보 모달 구현
+  router.push({
+    name: 'VideoDetail',
+    query: { videoId: video.id }
+  });
 };
 
 // 컴포넌트 마운트 시
@@ -279,5 +284,51 @@ onUnmounted(() => {
   color: white;
   text-align: center;
   padding: 20px;
+}
+
+.info-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.info-button:hover {
+  transform: scale(1.1);
+  background-color: rgba(255, 153, 51, 0.7);
+}
+
+.info-button i {
+  font-size: 20px;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.info-tooltip {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.info-button:hover .info-tooltip {
+  opacity: 1;
+}
+
+/* action-buttons 클래스에 z-index 추가 */
+.action-buttons {
+  z-index: 10;
 }
 </style>
