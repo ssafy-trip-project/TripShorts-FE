@@ -23,18 +23,14 @@
                 <template v-slot:prepend>
                   <v-icon color="#8B4513">{{ menu.icon }}</v-icon>
                 </template>
-                <v-list-item-title class="menu-text">{{
-                  menu.title
-                }}</v-list-item-title>
+                <v-list-item-title class="menu-text">{{ menu.title }}</v-list-item-title>
               </v-list-item>
 
               <v-list-item @click="handleLogout" class="menu-item">
                 <template v-slot:prepend>
                   <v-icon color="#8B4513">mdi-logout</v-icon>
                 </template>
-                <v-list-item-title class="menu-text"
-                  >로그아웃</v-list-item-title
-                >
+                <v-list-item-title class="menu-text">로그아웃</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-card>
@@ -70,21 +66,19 @@
             >
               <v-card class="video-card">
                 <v-img
-                  :src="video.thumbnail || '/api/placeholder/400/250'"
+                  :src="video.thumbnailUrl || '/api/placeholder/400/250'"
                   height="200"
                   cover
                 ></v-img>
-                <v-card-title
-                  class="d-flex align-center justify-center text-center pa-2"
-                >
-                  <span class="video-title">{{ video.title }}</span>
-                </v-card-title>
-                <v-card-subtitle
-                  class="d-flex align-center justify-center pb-2"
-                >
-                  <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
-                  <span class="likes-count">{{ video.likes }}K</span>
-                </v-card-subtitle>
+                <v-card-text class="d-flex align-center justify-space-between py-2">
+                  <span class="nickname">{{ video.nickname }}</span>
+                  <div class="d-flex align-center">
+                    <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
+                    <span class="likes-count">{{ video.likeCount }}</span>
+                  </div>
+                </v-card-text>
+
+                
               </v-card>
             </v-col>
           </v-row>
@@ -98,11 +92,7 @@
       color="#FF9933"
       class="d-md-none mobile-nav"
     >
-      <v-btn
-        v-for="menu in mobileMenuItems"
-        :key="menu.title"
-        :value="menu.route"
-      >
+      <v-btn v-for="menu in mobileMenuItems" :key="menu.title" :value="menu.route">
         <v-icon>{{ menu.icon }}</v-icon>
         {{ menu.title }}
       </v-btn>
@@ -110,145 +100,119 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import AuthService from '../services/auth';
 
-const router = useRouter();
-const activeTab = ref('home');
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import AuthService from '../services/auth'
+import VideoService from '../services/video'
+
+const router = useRouter()
+const activeTab = ref('home')
+const videos = ref([])
+
+// 비디오 데이터 가져오기
+const fetchVideos = async () => {
+  try {
+    const data = await VideoService.getVideos()
+    videos.value = data
+  } catch (error) {
+    console.error('Failed to fetch videos:', error)
+  }
+}
+
+
 
 const userInfo = ref({
   email: '',
-  nickname: '',
-});
+  nickname: ''
+})
 
 const menuItems = ref([
-  {
-    title: '홈',
+  { 
+    title: '홈', 
     icon: 'mdi-home',
     route: '/',
-    mobileOnly: false,
+    mobileOnly: false
   },
-  {
-    title: '프로필',
+  { 
+    title: '프로필', 
     icon: 'mdi-account',
     route: '/profile',
-    mobileOnly: false,
+    mobileOnly: false
   },
   {
-    title: '동영상 업로드',
-    icon: 'mdi-upload',
-    route: '/upload',
+    title: "동영상 업로드",
+    icon: "mdi-upload",
+    route: "/upload",
   },
-  {
-    title: '내 동영상',
+  { 
+    title: '내 동영상', 
     icon: 'mdi-video',
     route: '/my-videos',
-    mobileOnly: false,
-  },
-]);
+    mobileOnly: false
+  }
+])
 
 const mobileMenuItems = computed(() => [
-  {
-    title: '홈',
+  { 
+    title: '홈', 
     icon: 'mdi-home',
-    route: '/',
+    route: '/'
   },
-  {
-    title: '탐색',
+  { 
+    title: '탐색', 
     icon: 'mdi-compass',
-    route: '/explore',
+    route: '/explore'
   },
-  {
-    title: '업로드',
+  { 
+    title: '업로드', 
     icon: 'mdi-plus-circle',
-    route: '/upload',
+    route: '/upload'
   },
-  {
-    title: '내 동영상',
+  { 
+    title: '내 동영상', 
     icon: 'mdi-video',
-    route: '/my-videos',
+    route: '/my-videos'
   },
-  {
-    title: '프로필',
+  { 
+    title: '프로필', 
     icon: 'mdi-account',
-    route: '/profile',
-  },
-]);
+    route: '/profile'
+  }
+])
 
 const categories = ref([
-  '모두',
-  '노을이 멋진 곳',
-  '여행지',
-  '힐링스팟',
-  '일상생활',
-  '문화',
-  '음식',
-  '경치',
-  '동물',
-  '쇼핑',
-  '기타',
-]);
-
-const videos = ref([
-  {
-    title: '멋진 여행지에서의 노을',
-    thumbnail: '',
-    likes: 10,
-  },
-  {
-    title: '바다를 바라보며 힐링하기',
-    thumbnail: '',
-    likes: 30.4,
-  },
-  {
-    title: '도시의 밤',
-    thumbnail: '',
-    likes: 78,
-  },
-  {
-    title: '산책로의 아침',
-    thumbnail: '',
-    likes: 45,
-  },
-  {
-    title: '카페에서의 여유',
-    thumbnail: '',
-    likes: 92,
-  },
-  {
-    title: '공원의 봄',
-    thumbnail: '',
-    likes: 23,
-  },
-]);
+  "모두", "노을이 멋진 곳", "여행지", "힐링스팟", "일상생활", 
+  "문화", "음식", "경치", "동물", "쇼핑", "기타"
+])
 
 onMounted(async () => {
   try {
-    const data = await AuthService.getUserInfo();
-    userInfo.value = data;
+    const data = await AuthService.getUserInfo()
+    userInfo.value = data
+    await fetchVideos() // 비디오 데이터 가져오기
   } catch (error) {
-    console.error('Failed to get user info:', error);
-    router.push('/login');
+    console.error('Failed to get user info:', error)
+    router.push('/login')
   }
-});
+})
 
 const handleLogout = async () => {
   try {
-    await AuthService.logout();
-    router.push('/login');
+    await AuthService.logout()
+    router.push('/login')
   } catch (error) {
-    console.error('Logout failed:', error);
+    console.error('Logout failed:', error)
   }
-};
+}
 </script>
 
 <style scoped>
 .main-container {
-  background-color: #fff8f0;
+  background-color: #FFF8F0;
   min-height: 100vh;
-  padding-bottom: 56px; /* 모바일 하단 네비게이션 높이만큼 패딩 */
+  padding-bottom: 56px;  /* 모바일 하단 네비게이션 높이만큼 패딩 */
 }
 
 .profile-card {
@@ -256,7 +220,7 @@ const handleLogout = async () => {
 }
 
 .user-name {
-  color: #8b4513;
+  color: #8B4513;
   font-size: 1.3rem;
   font-weight: 500;
 }
@@ -274,7 +238,7 @@ const handleLogout = async () => {
 }
 
 .menu-text {
-  color: #8b4513;
+  color: #8B4513;
 }
 
 .menu-item:hover {
@@ -298,16 +262,16 @@ const handleLogout = async () => {
   transform: scale(1.02);
 }
 
-.video-title {
-  font-size: 1rem;
-  color: #8b4513;
-  line-height: 1.2;
-}
-
 .likes-count {
-  color: #8b4513;
+  color: #8B4513;
   font-size: 0.9rem;
   margin-left: 4px;
+}
+
+.nickname{
+  color: #8B4513;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .mobile-nav {
@@ -319,9 +283,9 @@ const handleLogout = async () => {
 
 @media (max-width: 960px) {
   .user-name {
-    color: #64b5f6;
+    font-size: 1.1rem;
   }
-
+  
   .main-container {
     padding-bottom: 80px;
   }
