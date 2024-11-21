@@ -7,12 +7,7 @@ const token = localStorage.getItem('accessToken');
 export const memberService = {
   // 프로필 정보 조회
   async getMyProfile() {
-    const response = await api.get(`/my/profile`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    },
-    )
+    const response = await api.get(`/my/profile`)
     return response.data
   },
 
@@ -27,18 +22,20 @@ export const memberService = {
 
   // 이미지 URL 업데이트
   async updateImageUrl(imageUrl) {
-    await axios.put(`${BASE_URL}/profile/image`, { imageUrl })
+    await api.put(`${BASE_URL}/profile/image`, { imageUrl })
   },
 
   // 닉네임 수정
   async updateNickname(nickname) {
-    await axios.put(`my/profile`, null, {
-      params: { nickname }
+    await api.put(`my/profile`, null, {
+        params: {
+            nickname
+        }
     })
   },
 
   // 회원 탈퇴
   async leave() {
-    await axios.delete(`${BASE_URL}/leave`)
+    await api.delete(`${BASE_URL}/leave`)
   }
 }
