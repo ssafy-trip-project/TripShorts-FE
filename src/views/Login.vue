@@ -3,17 +3,26 @@
     <v-container class="text-center login-container">
       <div class="logo-container">
         <h2 class="logo-text">TRIPSHORTS</h2>
-        <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" class="logo">
+        <svg
+          viewBox="0 0 240 240"
+          xmlns="http://www.w3.org/2000/svg"
+          class="logo"
+        >
           <rect width="240" height="240" fill="#FFF8F0" rx="20" />
-          <path d="M60 80 h120 a20 20 0 0 1 20 20 v80 a20 20 0 0 1 -20 20 h-120 a20 20 0 0 1 -20 -20 v-80 a20 20 0 0 1 20 -20" 
-                fill="#8B4513"/>
-          <circle cx="120" cy="140" r="40" fill="#FF9933"/>
-          <circle cx="120" cy="140" r="30" fill="#8B4513"/>
-          <circle cx="110" cy="130" r="8" fill="#FFF8F0" opacity="0.6"/>
+          <path
+            d="M60 80 h120 a20 20 0 0 1 20 20 v80 a20 20 0 0 1 -20 20 h-120 a20 20 0 0 1 -20 -20 v-80 a20 20 0 0 1 20 -20"
+            fill="#8B4513"
+          />
+          <circle cx="120" cy="140" r="40" fill="#FF9933" />
+          <circle cx="120" cy="140" r="30" fill="#8B4513" />
+          <circle cx="110" cy="130" r="8" fill="#FFF8F0" opacity="0.6" />
         </svg>
       </div>
 
-      <h1>지금 <span class="highlight">Trip 숏츠</span>와<br />함께 추억을 남겨보세요!</h1>
+      <h1>
+        지금 <span class="highlight">Trip 숏츠</span>와<br />함께 추억을
+        남겨보세요!
+      </h1>
 
       <v-btn
         color="#FEE500"
@@ -27,23 +36,24 @@
       </v-btn>
 
       <p class="agreement-text mt-3">
-        로그인 시 <span class="highlight">서비스 이용약관</span>에 동의하게 됩니다.
+        로그인 시 <span class="highlight">서비스 이용약관</span>에 동의하게
+        됩니다.
       </p>
     </v-container>
   </div>
 </template>
 
 <script setup>
-import AuthService from '../services/auth'
+import AuthService from '../services/auth';
 
 const handleKakaoLogin = () => {
-  window.location.href = AuthService.getKakaoLoginUrl()
-}
+  window.location.href = AuthService.getKakaoLoginUrl();
+};
 </script>
 
 <style scoped>
 .page-container {
-  background-color: #FFF8F0;
+  background-color: #fff8f0;
   width: 100%;
   height: 100%;
   position: fixed;
@@ -69,14 +79,14 @@ const handleKakaoLogin = () => {
 }
 
 .logo-text {
-  color: #8B4513;
+  color: #8b4513;
   font-size: 2rem;
   font-weight: 900;
   letter-spacing: 1px;
 }
 
 h1 {
-  color: #8B4513;
+  color: #8b4513;
   font-size: 1.8rem;
   margin-bottom: 2rem;
   line-height: 1.4;
@@ -84,7 +94,7 @@ h1 {
 }
 
 .highlight {
-  color: #FF9933;
+  color: #ff9933;
   font-weight: bold;
 }
 
@@ -97,7 +107,7 @@ h1 {
 
 .agreement-text {
   font-size: 0.8rem;
-  color: #8B4513;
+  color: #8b4513;
   opacity: 0.8;
   text-align: center;
 }
