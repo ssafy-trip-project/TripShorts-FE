@@ -6,6 +6,7 @@ import AuthService from '../services/auth';
 import VideoRecorder from '@/views/video/VideoRecorder.vue';
 import VideoFeed from '@/views/video/VideoFeed.vue';
 import VideoPreview from '@/views/video/VideoPreview.vue';
+import VideoDetail from '@/views/video/VideoDetail.vue';
 import TourInfo from '@/views/video/TourInfo.vue';
 
 const router = createRouter({
@@ -48,6 +49,11 @@ const router = createRouter({
       name: 'regist-tour',
       component: TourInfo,
     },
+    {
+      path: '/video/detail',
+      name: 'VideoDetail',
+      component: VideoDetail
+    }
   ],
 });
 
