@@ -8,6 +8,7 @@ import VideoFeed from '@/views/video/VideoFeed.vue';
 import VideoPreview from '@/views/video/VideoPreview.vue';
 import VideoDetail from '@/views/video/VideoDetail.vue';
 import TourInfo from '@/views/video/TourInfo.vue';
+import Profile from "@/views/my/Profile.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -53,6 +54,11 @@ const router = createRouter({
       path: '/video/detail',
       name: 'VideoDetail',
       component: VideoDetail
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: Profile
     }
   ],
 });
