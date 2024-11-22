@@ -173,35 +173,18 @@
   
   // 이미지 변경 처리
   const handleImageChange = async (event) => {
-    const file = event.target.files[0]
-    if (!file) return
-  
-    uploadingImage.value = true
+    const file = event.target.files[0];
+    if (!file) return;
+
+    uploadingImage.value = true;
     try {
-      // Presigned URL 요청
-      const { presignedUrl, filename } = await memberService.getPresignedUrl(
-        file.name,
-        file.type
-      )
-  
-      // S3에 직접 업로드
-      await fetch(presignedUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type
-        }
-      })
-  
-      // 이미지 URL 업데이트
-      const imageUrl = presignedUrl.split('?')[0]
-      await memberService.updateImageUrl(imageUrl)
-      profileData.value.imageUrl = imageUrl
-      showSuccess('프로필 이미지가 업데이트되었습니다.')
+      const newImageUrl = await memberService.updateProfileImage(file);
+      profileData.value.imageUrl = newImageUrl;
+      showSuccess('프로필 이미지가 업데이트되었습니다.');
     } catch (error) {
-      showError('이미지 업로드에 실패했습니다.')
+      showError(error.message);
     } finally {
-      uploadingImage.value = false
+      uploadingImage.value = false;
     }
   }
   
