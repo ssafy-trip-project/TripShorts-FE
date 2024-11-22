@@ -1,101 +1,56 @@
 <template>
   <div class="video-feed" @scroll="handleScroll" ref="feedContainer">
-    <!-- 디버깅용 -->
-    <div v-if="videos.length === 0" class="no-videos">No videos available</div>
-
-    <div v-for="video in videos" :key="video.id" class="video-container">
-      <!-- 비디오 플레이어 -->
-      <video
-        :src="video.videoUrl"
-        :poster="video.thumbnailUrl"
-        class="video-player"
-        loop
-        muted
-        playsinline
-        autoplay
-        @click="togglePlay"
-      ></video>
-
-      <!-- 우측 액션 버튼들 -->
-      <div class="action-buttons">
-        <div class="action-item">
-          <button class="action-button" @click="toggleLike(video)">
-            <i class="fas fa-heart" :class="{ liked: video.liked }"></i>
-            <span class="action-count">{{ video.likeCount }}</span>
-          </button>
-        </div>
-        <div class="action-item">
-          <button class="action-button" @click="openComments(video)">
-            <i class="fas fa-comment"></i>
-            <span class="action-count">{{ video.commentCount }}</span>
-          </button>
-        </div>
-        <div class="action-item">
-          <button class="action-button info-button" @click="openDetails(video)">
-            <i class="fas fa-info-circle"></i>
-            <span class="info-tooltip">상세정보</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 하단 크리에이터 정보 -->
-      <div class="creator-info">
-        <img :src="video.creator.imageUrl" class="creator-avatar" />
-        <span class="creator-nickname">{{ video.creator.nickname }}</span>
-      </div>
+    <!-- 비디오가 없을 때 -->
+    <div v-if="videos.length === 0" class="empty-state">
+      <div class="empty-message">Loading videos...</div>
     </div>
 
-    <div v-if="loading" class="loading-indicator">Loading...</div>
+    <!-- 비디오 리스트 -->
+    <VideoItem
+      v-for="(video, index) in videos"
+      :key="video.id"
+      :video="video"
+      @video-loaded="handleVideoLoaded($event, index)"
+      @like-click="toggleLike"
+      @comment-click="openComments"
+      @details-click="openDetails"
+    />
+
+    <!-- 로딩 인디케이터 -->
+    <div v-if="loading" class="loading-indicator">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- 댓글 사이드패널 -->
+    <CommentDrawer
+      v-model="showComments"
+      :comments="comments"
+      @submit-comment="addComment"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import {useRouter} from "vue-router"
-import axios from 'axios';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import VideoItem from './VideoItem.vue';
+import CommentDrawer from './CommentDrawer.vue';
 import api from '@/api';
 
+// ref 정의
 const videos = ref([]);
-const videoRefs = ref([]); // 비디오 엘리먼트 참조를 위한 ref
 const loading = ref(false);
 const nextCursor = ref(null);
 const hasNext = ref(true);
-let observer = null;
+const feedContainer = ref(null);
+const videoRefs = ref([]);
+const showComments = ref(false);
+const currentVideo = ref(null);
+const comments = ref([]);
+const router = useRouter();
 
-const router = useRouter()
-
-// 비디오 로드 완료 핸들러
-const handleVideoLoaded = (event, index) => {
-  console.log(`Video ${index} loaded`);
-  const video = event.target;
-  // 비디오가 viewport에 있는지 확인하고 재생
-  if (observer) {
-    observer.observe(video);
-  }
-};
-
-// Intersection Observer 설정
-const setupIntersectionObserver = () => {
-  observer = new IntersectionObserver(
-    entries => {
-      entries.forEach(entry => {
-        const video = entry.target;
-        if (entry.isIntersecting) {
-          // 화면에 보이면 재생
-          video.play().catch(error => {
-            console.log('Video play failed:', error);
-          });
-        } else {
-          // 화면에서 벗어나면 정지
-          video.pause();
-        }
-      });
-    },
-    {
-      threshold: 0.6, // 60% 이상 보일 때 재생
-    },
-  );
-};
+// 컴포넌트 범위에서 observers 관리
+const observers = ref(new Map());
 
 const fetchVideos = async () => {
   if (loading.value || !hasNext.value) return;
@@ -104,7 +59,7 @@ const fetchVideos = async () => {
     loading.value = true;
     console.log('Fetching videos...');
     const token = localStorage.getItem('accessToken');
-    // presignedURL
+
     const response = await api.get('/api/v1/shorts/feed', {
       params: {
         cursorId: nextCursor.value,
@@ -134,7 +89,39 @@ const fetchVideos = async () => {
   }
 };
 
-// 스크롤 핸들러
+const setupIntersectionObserver = () => {
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        const video = entry.target;
+        if (entry.isIntersecting) {
+          video.play().catch(error => {
+            console.log('Video play failed:', error);
+          });
+        } else {
+          video.pause();
+        }
+      });
+    },
+    {
+      threshold: 0.6,
+    },
+  );
+
+  observers.value.set('video-observer', observer);
+  return observer;
+};
+
+const handleVideoLoaded = (event, index) => {
+  console.log(`Video ${index} loaded`);
+  const video = event.target;
+  const observer =
+    observers.value.get('video-observer') || setupIntersectionObserver();
+  if (observer) {
+    observer.observe(video);
+  }
+};
+
 const handleScroll = async event => {
   const container = event.target;
   const scrollPosition = container.scrollTop + container.clientHeight;
@@ -145,56 +132,85 @@ const handleScroll = async event => {
   }
 };
 
-// 비디오 재생/정지 토글
-const togglePlay = event => {
-  const video = event.target;
-  if (video.paused) {
-    video.play().catch(error => {
-      console.log('Video play failed:', error);
-    });
-  } else {
-    video.pause();
-  }
-};
-
-// 좋아요 토글
 const toggleLike = async video => {
   try {
     video.liked = !video.liked;
     video.likeCount += video.liked ? 1 : -1;
-    // TODO: API 연동
   } catch (error) {
     console.error('Failed to toggle like:', error);
   }
 };
 
-// 댓글 모달 열기
-const openComments = video => {
-  console.log('Opening comments for video:', video.id);
-  // TODO: 댓글 모달 구현
+const openComments = async video => {
+  currentVideo.value = video;
+  showComments.value = true;
+  try {
+    const response = await api.get(`/api/v1/shorts/${video.id}/comments`);
+    comments.value = response.data;
+    console.log('댓글 응답 데이터 : ', comments.value);
+  } catch (error) {
+    console.error('Failed to fetch comments:', error);
+  }
 };
 
-// 상세 정보 모달 열기
+const addComment = async content => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    // 댓글 작성
+    await api.post(
+      `/api/v1/shorts/${currentVideo.value.id}/comment`,
+      { content },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    // 댓글 목록 새로 가져오기
+    const response = await api.get(
+      `/api/v1/shorts/${currentVideo.value.id}/comments`,
+    );
+    comments.value = response.data;
+  } catch (error) {
+    console.error('Failed to add comment:', error);
+  }
+};
+
 const openDetails = video => {
   console.log('Opening details for video:', video.id);
   // TODO: 상세 정보 모달 구현
   router.push({
     name: 'VideoDetail',
-    query: { videoId: video.id }
+    query: { videoId: video.id },
   });
 };
 
-// 컴포넌트 마운트 시
-onMounted(() => {
-  setupIntersectionObserver();
-  fetchVideos();
+// showComments 상태가 변경될 때 처리
+watch(showComments, newVal => {
+  if (!newVal) {
+    currentVideo.value = null;
+    comments.value = [];
+  }
 });
 
-// 컴포넌트 언마운트 시 Observer 정리
+onMounted(() => {
+  fetchVideos();
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && showComments.value) {
+      showComments.value = false;
+    }
+  });
+});
+
 onUnmounted(() => {
-  if (observer) {
-    observer.disconnect();
-  }
+  observers.value.forEach(observer => observer.disconnect());
+  observers.value.clear();
+  window.removeEventListener('keydown', e => {
+    if (e.key === 'Escape' && showComments.value) {
+      showComments.value = false;
+    }
+  });
 });
 </script>
 
@@ -206,70 +222,12 @@ onUnmounted(() => {
   background-color: black;
 }
 
-.video-container {
+.empty-state {
   height: 100vh;
-  position: relative;
-  scroll-snap-align: start;
-  overflow: hidden; /* 추가 */
-}
-
-.video-player {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.action-buttons {
-  position: absolute;
-  right: 20px;
-  bottom: 100px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.action-item {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-}
-
-.action-button {
-  background: none;
-  border: none;
+  justify-content: center;
   color: white;
-  cursor: pointer;
-  font-size: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.action-count {
-  font-size: 14px;
-}
-
-.creator-info {
-  position: absolute;
-  left: 20px;
-  bottom: 30px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: white;
-}
-
-.creator-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid white;
-}
-
-.creator-nickname {
-  font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .loading-indicator {
@@ -278,17 +236,27 @@ onUnmounted(() => {
   color: white;
 }
 
-.liked {
-  color: #ff4545;
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
 }
 
-/* 디버깅용 스타일 */
-.no-videos {
-  color: white;
-  text-align: center;
-  padding: 20px;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
+/* 액션 버튼 관련 스타일 */
+.action-buttons {
+  z-index: 10;
+}
+
+/* info 버튼 관련 스타일 - 중복 제거 */
 .info-button {
   position: relative;
   width: 40px;
@@ -296,7 +264,9 @@ onUnmounted(() => {
   border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
-  transition: transform 0.2s, background-color 0.2s;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
 }
 
 .info-button:hover {
@@ -328,10 +298,5 @@ onUnmounted(() => {
 
 .info-button:hover .info-tooltip {
   opacity: 1;
-}
-
-/* action-buttons 클래스에 z-index 추가 */
-.action-buttons {
-  z-index: 10;
 }
 </style>
