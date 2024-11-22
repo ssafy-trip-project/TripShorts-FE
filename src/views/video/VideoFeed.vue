@@ -71,10 +71,12 @@ const fetchVideos = async () => {
       const videosWithLikeStatus = await Promise.all(
         response.data.videos.map(async video => {
           try {
-            const likeStatus = await api.get(`/api/goods/${video.id}/status`);
+            const likeStatus = await api.get(
+              `/api/v1/goods/${video.id}/status`,
+            );
             return {
               ...video,
-              liked: likeStatus.data.isLiked,
+              liked: likeStatus.data.liked,
               likeCount: likeStatus.data.totalLikes,
             };
           } catch (error) {
