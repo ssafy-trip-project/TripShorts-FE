@@ -1,11 +1,9 @@
 <template>
   <div class="video-feed" @scroll="handleScroll" ref="feedContainer">
-    <!-- 비디오가 없을 때 -->
     <div v-if="videos.length === 0" class="empty-state">
       <div class="empty-message">Loading videos...</div>
     </div>
 
-    <!-- 비디오 리스트 -->
     <VideoItem
       v-for="(video, index) in videos"
       :key="video.id"
@@ -16,12 +14,10 @@
       @details-click="openDetails"
     />
 
-    <!-- 로딩 인디케이터 -->
     <div v-if="loading" class="loading-indicator">
       <div class="spinner"></div>
     </div>
 
-    <!-- 댓글 사이드패널 -->
     <CommentDrawer
       v-model="showComments"
       :comments="comments"
@@ -51,6 +47,8 @@ const router = useRouter();
 
 // 컴포넌트 범위에서 observers 관리
 const observers = ref(new Map());
+
+const isMobile = ref(window.innerWidth <= 768);
 
 // 비디오 데이터를 가져올 때 좋아요 상태도 함께 받아오도록 fetchVideos 수정
 const fetchVideos = async () => {
@@ -237,6 +235,10 @@ onMounted(() => {
       showComments.value = false;
     }
   });
+
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 768;
+  });
 });
 
 onUnmounted(() => {
@@ -247,6 +249,9 @@ onUnmounted(() => {
       showComments.value = false;
     }
   });
+  window.removeEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 768;
+  });
 });
 </script>
 
@@ -256,6 +261,7 @@ onUnmounted(() => {
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   background-color: black;
+  -webkit-overflow-scrolling: touch;
 }
 
 .empty-state {
@@ -263,76 +269,47 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .loading-indicator {
-  text-align: center;
   padding: 20px;
-  color: white;
+  display: flex;
+  justify-content: center;
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
+  border-top-color: #fe2c55;
+  animation: spin 0.8s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .video-feed {
+    /* 모바일 Safari에서 전체 화면 스크롤 개선 */
+    height: -webkit-fill-available;
+  }
+
+  .empty-state {
+    font-size: 14px;
+  }
+
+  .spinner {
+    width: 24px;
+    height: 24px;
+  }
+
+  .loading-indicator {
+    padding: 16px;
+  }
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
-}
-
-/* 액션 버튼 관련 스타일 */
-.action-buttons {
-  z-index: 10;
-}
-
-/* info 버튼 관련 스타일 - 중복 제거 */
-.info-button {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  transition:
-    transform 0.2s,
-    background-color 0.2s;
-}
-
-.info-button:hover {
-  transform: scale(1.1);
-  background-color: rgba(255, 153, 51, 0.7);
-}
-
-.info-button i {
-  font-size: 20px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.info-tooltip {
-  position: absolute;
-  bottom: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-.info-button:hover .info-tooltip {
-  opacity: 1;
 }
 </style>
