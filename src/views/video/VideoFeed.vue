@@ -52,38 +52,51 @@ const router = useRouter();
 // 컴포넌트 범위에서 observers 관리
 const observers = ref(new Map());
 
+// 비디오 데이터를 가져올 때 좋아요 상태도 함께 받아오도록 fetchVideos 수정
 const fetchVideos = async () => {
   if (loading.value || !hasNext.value) return;
 
   try {
     loading.value = true;
-    console.log('Fetching videos...');
-    const token = localStorage.getItem('accessToken');
 
     const response = await api.get('/api/v1/shorts/feed', {
       params: {
         cursorId: nextCursor.value,
         size: 5,
       },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
 
-    console.log('Response:', response.data);
-
     if (response.data && Array.isArray(response.data.videos)) {
-      videos.value = [...videos.value, ...response.data.videos];
+      // 각 비디오의 좋아요 상태 조회
+      const videosWithLikeStatus = await Promise.all(
+        response.data.videos.map(async video => {
+          try {
+            const likeStatus = await api.get(`/api/goods/${video.id}/status`);
+            return {
+              ...video,
+              liked: likeStatus.data.isLiked,
+              likeCount: likeStatus.data.totalLikes,
+            };
+          } catch (error) {
+            console.error(
+              `Failed to fetch like status for video ${video.id}:`,
+              error,
+            );
+            return {
+              ...video,
+              liked: false,
+              likeCount: 0,
+            };
+          }
+        }),
+      );
+
+      videos.value = [...videos.value, ...videosWithLikeStatus];
       nextCursor.value = response.data.nextCursor;
       hasNext.value = response.data.hasNext;
     }
   } catch (error) {
     console.error('Failed to fetch videos:', error);
-    console.log('Error details:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-    });
   } finally {
     loading.value = false;
   }
@@ -134,10 +147,31 @@ const handleScroll = async event => {
 
 const toggleLike = async video => {
   try {
-    video.liked = !video.liked;
-    video.likeCount += video.liked ? 1 : -1;
+    if (!video.liked) {
+      // 좋아요 추가
+      await api.post(`/api/v1/goods/${video.id}/like`);
+      video.liked = true;
+      video.likeCount += 1;
+    } else {
+      // 좋아요 취소
+      await api.delete(`/api/v1/goods/${video.id}/like`);
+      video.liked = false;
+      video.likeCount -= 1;
+    }
   } catch (error) {
-    console.error('Failed to toggle like:', error);
+    // 에러 발생 시 상태 롤백
+    if (!video.liked) {
+      video.likeCount -= 1;
+    } else {
+      video.likeCount += 1;
+    }
+    video.liked = !video.liked;
+
+    if (error.response?.status === 400) {
+      console.error('이미 좋아요를 누른 영상입니다.');
+    } else {
+      console.error('Failed to toggle like:', error);
+    }
   }
 };
 
