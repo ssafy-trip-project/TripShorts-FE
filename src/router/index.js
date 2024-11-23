@@ -23,6 +23,7 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: Login,
+      meta: { requiresAuth: false },
     },
     {
       path: '/oauth/callback/kakao',

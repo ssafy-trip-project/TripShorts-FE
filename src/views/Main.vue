@@ -189,8 +189,13 @@ const categories = ref([
 
 onMounted(async () => {
   try {
-    const data = await AuthService.getUserInfo()
-    userInfo.value = data
+    // 토큰이 있는 경우에만 유저 정보 조회
+    const token = AuthService.getAccessToken()
+    if (token) {
+      const data = await AuthService.getUserInfo()
+      userInfo.value = data
+    }
+    
     await fetchVideos() // 비디오 데이터 가져오기
   } catch (error) {
     console.error('Failed to get user info:', error)
