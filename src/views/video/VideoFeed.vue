@@ -1,11 +1,9 @@
 <template>
   <div class="video-feed" @scroll="handleScroll" ref="feedContainer">
-    <!-- 비디오가 없을 때 -->
     <div v-if="videos.length === 0" class="empty-state">
       <div class="empty-message">Loading videos...</div>
     </div>
 
-    <!-- 비디오 리스트 -->
     <VideoItem
       v-for="(video, index) in videos"
       :key="video.id"
@@ -16,12 +14,10 @@
       @details-click="openDetails"
     />
 
-    <!-- 로딩 인디케이터 -->
     <div v-if="loading" class="loading-indicator">
       <div class="spinner"></div>
     </div>
 
-    <!-- 댓글 사이드패널 -->
     <CommentDrawer
       v-model="showComments"
       :comments="comments"
@@ -48,11 +44,13 @@ const showComments = ref(false);
 const currentVideo = ref(null);
 const comments = ref([]);
 const router = useRouter();
+const currentVideoIndex = ref(0);
 
 // 컴포넌트 범위에서 observers 관리
 const observers = ref(new Map());
 
-// 비디오 데이터를 가져올 때 좋아요 상태도 함께 받아오도록 fetchVideos 수정
+const isMobile = ref(window.innerWidth <= 768);
+
 const fetchVideos = async () => {
   if (loading.value || !hasNext.value) return;
 
@@ -67,33 +65,9 @@ const fetchVideos = async () => {
     });
 
     if (response.data && Array.isArray(response.data.videos)) {
-      // 각 비디오의 좋아요 상태 조회
-      const videosWithLikeStatus = await Promise.all(
-        response.data.videos.map(async video => {
-          try {
-            const likeStatus = await api.get(
-              `/api/v1/goods/${video.id}/status`,
-            );
-            return {
-              ...video,
-              liked: likeStatus.data.liked,
-              likeCount: likeStatus.data.totalLikes,
-            };
-          } catch (error) {
-            console.error(
-              `Failed to fetch like status for video ${video.id}:`,
-              error,
-            );
-            return {
-              ...video,
-              liked: false,
-              likeCount: 0,
-            };
-          }
-        }),
-      );
-
-      videos.value = [...videos.value, ...videosWithLikeStatus];
+      // VideoResponse에 이미 liked와 likeCount가 포함되어 있으므로
+      // 추가 API 호출 없이 바로 사용
+      videos.value = [...videos.value, ...response.data.videos];
       nextCursor.value = response.data.nextCursor;
       hasNext.value = response.data.hasNext;
     }
@@ -113,6 +87,20 @@ const setupIntersectionObserver = () => {
           video.play().catch(error => {
             console.log('Video play failed:', error);
           });
+          // 현재 보고 있는 비디오의 인덱스 업데이트
+          const index = videoRefs.value.findIndex(v => v === video);
+          if (index !== -1) {
+            currentVideoIndex.value = index;
+
+            // 현재 비디오 이후 남은 비디오 수 확인
+            const remainingVideos =
+              videos.value.length - (currentVideoIndex.value + 1);
+
+            // 남은 비디오가 3개 이하이고, 추가 데이터가 있다면 새로운 비디오 로드
+            if (remainingVideos <= 3 && hasNext.value && !loading.value) {
+              fetchVideos();
+            }
+          }
         } else {
           video.pause();
         }
@@ -137,15 +125,15 @@ const handleVideoLoaded = (event, index) => {
   }
 };
 
-const handleScroll = async event => {
-  const container = event.target;
-  const scrollPosition = container.scrollTop + container.clientHeight;
-  const scrollHeight = container.scrollHeight;
+// const handleScroll = async event => {
+//   const container = event.target;
+//   const scrollPosition = container.scrollTop + container.clientHeight;
+//   const scrollHeight = container.scrollHeight;
 
-  if (scrollHeight - scrollPosition < 100) {
-    await fetchVideos();
-  }
-};
+//   if (scrollHeight - scrollPosition < 100) {
+//     await fetchVideos();
+//   }
+// };
 
 const toggleLike = async video => {
   try {
@@ -237,6 +225,10 @@ onMounted(() => {
       showComments.value = false;
     }
   });
+
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 768;
+  });
 });
 
 onUnmounted(() => {
@@ -247,6 +239,9 @@ onUnmounted(() => {
       showComments.value = false;
     }
   });
+  window.removeEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 768;
+  });
 });
 </script>
 
@@ -256,6 +251,7 @@ onUnmounted(() => {
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   background-color: black;
+  -webkit-overflow-scrolling: touch;
 }
 
 .empty-state {
@@ -263,76 +259,47 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .loading-indicator {
-  text-align: center;
   padding: 20px;
-  color: white;
+  display: flex;
+  justify-content: center;
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
+  border-top-color: #fe2c55;
+  animation: spin 0.8s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .video-feed {
+    /* 모바일 Safari에서 전체 화면 스크롤 개선 */
+    height: -webkit-fill-available;
+  }
+
+  .empty-state {
+    font-size: 14px;
+  }
+
+  .spinner {
+    width: 24px;
+    height: 24px;
+  }
+
+  .loading-indicator {
+    padding: 16px;
+  }
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
-}
-
-/* 액션 버튼 관련 스타일 */
-.action-buttons {
-  z-index: 10;
-}
-
-/* info 버튼 관련 스타일 - 중복 제거 */
-.info-button {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  transition:
-    transform 0.2s,
-    background-color 0.2s;
-}
-
-.info-button:hover {
-  transform: scale(1.1);
-  background-color: rgba(255, 153, 51, 0.7);
-}
-
-.info-button i {
-  font-size: 20px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.info-tooltip {
-  position: absolute;
-  bottom: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-.info-button:hover .info-tooltip {
-  opacity: 1;
 }
 </style>

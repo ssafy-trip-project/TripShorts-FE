@@ -78,31 +78,50 @@ onUnmounted(() => {
 
 <template>
   <div class="preview-container">
-    <div v-if="!videoUrl" class="loading">비디오 로딩 중...</div>
+    <div class="top-nav">
+      <v-btn class="back-btn" @click="cancel" variant="text">
+        <v-icon size="28">mdi-arrow-left</v-icon>
+      </v-btn>
+      <span class="nav-title">새로운 게시물</span>
+      <v-btn class="next-btn" @click="registTourInfo" variant="text">
+        다음
+      </v-btn>
+    </div>
 
-    <video
-      v-if="videoUrl"
-      :src="videoUrl"
-      controls
-      playsinline
-      class="preview-video"
-      @error="e => console.error('Video element error:', e)"
-    ></video>
+    <div class="content-section">
+      <div class="loading-overlay" v-if="!videoUrl">
+        <v-progress-circular indeterminate color="white"></v-progress-circular>
+      </div>
 
-    <img
-      v-if="thumbnailUrl"
-      :src="thumbnailUrl"
-      class="preview-thumbnail"
-      alt="영상 썸네일"
-    />
+      <div
+        class="preview-content"
+        v-if="videoUrl"
+        style="display: flex; flex-direction: column; height: 100%"
+      >
+        <div class="video-container" style="flex-grow: 1">
+          <video
+            :src="videoUrl"
+            controls
+            playsinline
+            class="preview-video"
+            @error="e => console.error('Video element error:', e)"
+          ></video>
+        </div>
 
-    <div class="preview-controls">
-      <div class="button-group">
-        <v-btn @click="registTourInfo" color="primary" class="mx-2">
-          여행지 정보 등록
-        </v-btn>
-        <v-btn @click="reRecord" text class="mx-2"> 다시 녹화 </v-btn>
-        <v-btn @click="cancel" text class="mx-2"> 취소 </v-btn>
+        <div class="thumbnail-section" style="margin-bottom: 100px">
+          <span class="thumbnail-title">썸네일 이미지</span>
+          <div class="thumbnail-preview">
+            <img
+              v-if="thumbnailUrl"
+              :src="thumbnailUrl"
+              class="preview-thumbnail"
+              alt="영상 썸네일"
+            />
+          </div>
+          <v-btn class="re-record-btn" @click="reRecord" variant="text">
+            다시 촬영
+          </v-btn>
+        </div>
       </div>
     </div>
   </div>
@@ -112,38 +131,102 @@ onUnmounted(() => {
 .preview-container {
   width: 100%;
   height: 100vh;
+  background: #000;
   display: flex;
   flex-direction: column;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  padding: 16px;
+  background: #000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.back-btn {
+  color: #fe2c55 !important;
+  min-width: 0;
+  padding: 0 16px;
+}
+
+.nav-title {
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.next-btn {
+  color: #fe2c55 !important;
+  font-weight: 600;
+}
+
+.content-section {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
   justify-content: center;
-  padding: 20px;
-  background: #121212;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.8);
 }
 
 .preview-video {
-  max-width: 90%;
-  max-height: 70vh;
-  margin-bottom: 20px;
+  width: 100%;
+  height: 65vh;
+  object-fit: contain;
+  background: #000;
+}
+
+.thumbnail-section {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.thumbnail-title {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  width: 100px;
+}
+
+.thumbnail-preview {
+  flex: 1;
+  display: flex;
+  justify-content: center;
 }
 
 .preview-thumbnail {
-  max-width: 200px;
-  max-height: 200px;
-  object-fit: contain;
-  border: 1px solid #333;
+  width: 120px;
+  height: 160px;
+  object-fit: cover;
   border-radius: 4px;
-  margin: 20px 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.preview-controls {
-  width: 100%;
-  max-width: 600px;
-  padding: 20px;
+.re-record-btn {
+  color: #fe2c55 !important;
+  font-weight: 600;
+  font-size: 14px;
+  width: 100px;
+  text-align: right;
 }
 
-.button-group {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+@media (max-width: 768px) {
+  .preview-video {
+    height: 50vh;
+  }
 }
 </style>

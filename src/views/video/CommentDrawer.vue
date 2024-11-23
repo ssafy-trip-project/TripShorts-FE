@@ -1,58 +1,56 @@
 <template>
   <v-navigation-drawer
-    :modelValue="isOpen"
+    :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
     location="right"
     temporary
-    width="400"
-    class="comments-drawer pa-0"
+    :width="isMobile ? '100%' : '420'"
+    class="comments-drawer"
   >
-    <v-card class="comments-card h-100">
-      <!-- 헤더 -->
-      <v-card-title class="comments-header px-4 py-3">
-        <div class="d-flex align-center justify-space-between">
-          <span class="text-body-1">댓글 {{ comments.length }}개</span>
-          <v-btn icon size="small" @click="$emit('update:modelValue', false)">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
+    <div class="comments-container">
+      <div class="comments-header">
+        <h3 class="comments-title">댓글 {{ comments.length }}개</h3>
+        <button class="close-button" @click="$emit('update:modelValue', false)">
+          <v-icon>mdi-close</v-icon>
+        </button>
+      </div>
+
+      <div class="comments-list">
+        <div v-if="comments.length === 0" class="empty-comments">
+          <v-icon size="48" color="rgba(22, 24, 35, 0.2)"
+            >mdi-message-text-outline</v-icon
+          >
+          <p>첫 댓글을 남겨보세요!</p>
         </div>
-      </v-card-title>
 
-      <v-divider></v-divider>
-
-      <!-- 댓글 목록 영역 -->
-      <v-card-text class="comments-container pa-0">
-        <div v-if="comments.length > 0" class="comments-list">
+        <div v-else class="comment-items">
           <div
             v-for="comment in comments"
             :key="comment.id"
-            class="comment-item px-4 py-3"
+            class="comment-item"
           >
-            <div class="d-flex gap-3">
-              <v-avatar size="40" class="me-4">
-                <v-img :src="comment.userProfileUrl" cover></v-img>
-              </v-avatar>
-              <div class="comment-content">
-                <div class="comment-user">
-                  <span class="font-weight-medium">{{ comment.nickname }}</span>
-                </div>
-                <div class="comment-text">{{ comment.content }}</div>
-                <div class="comment-info d-flex gap-2 mt-1">
-                  <span class="text-caption text-grey">
-                    {{ formatDate(comment.createdAt) }}
-                  </span>
-                </div>
+            <img :src="comment.userProfileUrl" class="comment-avatar" />
+            <div class="comment-content">
+              <div class="comment-header">
+                <span class="comment-user">{{ comment.nickname }}</span>
+                <span class="comment-time">{{
+                  formatDate(comment.createdAt)
+                }}</span>
+              </div>
+              <div class="comment-text">{{ comment.content }}</div>
+              <div class="comment-actions">
+                <button class="action-btn">
+                  <v-icon size="16">mdi-heart-outline</v-icon>
+                  <span>{{ comment.likes || 0 }}</span>
+                </button>
+                <button class="action-btn">답글</button>
               </div>
             </div>
           </div>
         </div>
-        <div v-else class="d-flex align-center justify-center empty-comments">
-          첫 댓글을 남겨보세요!
-        </div>
-      </v-card-text>
+      </div>
 
-      <!-- 댓글 입력 영역 -->
-      <div class="comment-input-container px-4 py-3">
+      <div class="comment-input-wrapper">
         <v-text-field
           v-model="newComment"
           placeholder="댓글 추가..."
@@ -66,7 +64,7 @@
             <v-btn
               icon
               variant="text"
-              color="primary"
+              :color="newComment.trim() ? '#fe2c55' : 'rgba(22, 24, 35, 0.34)'"
               size="small"
               @click="submitComment"
               :disabled="!newComment.trim()"
@@ -76,13 +74,20 @@
           </template>
         </v-text-field>
       </div>
-    </v-card>
+    </div>
   </v-navigation-drawer>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
+const isMobile = ref(window.innerWidth <= 768);
+
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 768;
+  });
+});
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -143,86 +148,169 @@ const formatDate = dateString => {
 
 <style scoped>
 .comments-drawer {
-  position: fixed !important;
-  z-index: 1000;
-}
-
-.comments-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 0;
-}
-
-.comments-header {
-  background-color: white;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  border-left: none;
 }
 
 .comments-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(22, 24, 35, 0.12);
+  position: relative;
+}
+
+.comments-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: #121212;
+}
+
+.close-button {
+  position: absolute;
+  right: 16px;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  color: #121212;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: rgba(22, 24, 35, 0.06);
+}
+
+.comments-list {
   flex: 1;
   overflow-y: auto;
-  background-color: #fafafa;
+  background: #fafafa;
+}
+
+.empty-comments {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(22, 24, 35, 0.5);
+}
+
+.comment-items {
+  padding: 16px;
 }
 
 .comment-item {
-  background-color: white;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 16px 20px;
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .comment-content {
   flex: 1;
-  min-width: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .comment-user {
+  font-weight: 600;
   font-size: 14px;
-  line-height: 1.4;
+  color: #121212;
+}
+
+.comment-time {
+  font-size: 12px;
+  color: rgba(22, 24, 35, 0.5);
 }
 
 .comment-text {
   font-size: 14px;
   line-height: 1.4;
-  margin-top: 2px;
-  word-break: break-word;
+  margin-bottom: 8px;
+  color: #121212;
 }
 
-.comment-info {
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.5);
+.comment-actions {
+  display: flex;
+  gap: 16px;
 }
 
-.comment-input-container {
-  background-color: white;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  position: sticky;
-  bottom: 0;
+.action-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: rgba(22, 24, 35, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.empty-comments {
-  height: 200px;
-  color: rgba(0, 0, 0, 0.5);
+.action-btn:hover {
+  color: #fe2c55;
 }
 
-/* 스크롤바 스타일링 */
-.comments-container::-webkit-scrollbar {
-  width: 4px;
+.comment-input-wrapper {
+  padding: 16px;
+  background: white;
+  border-top: 1px solid rgba(22, 24, 35, 0.12);
 }
 
-.comments-container::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+.comment-input {
+  background: #f1f1f2;
+  border-radius: 8px;
 }
 
-.comments-container::-webkit-scrollbar-track {
-  background-color: transparent;
+:deep(.v-field__outline) {
+  --v-field-border-opacity: 0 !important;
 }
 
-@media (max-width: 600px) {
-  .comments-drawer {
-    width: 100% !important;
-  }
+:deep(.v-text-field) {
+  border-radius: 8px;
+}
+
+/* Custom scrollbar */
+.comments-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+  background: rgba(22, 24, 35, 0.06);
+  border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(22, 24, 35, 0.1);
 }
 </style>
