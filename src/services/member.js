@@ -2,8 +2,6 @@
 
 import api from '../api'
 
-const token = localStorage.getItem('accessToken');
-
 export const memberService = {
   // 프로필 정보 조회
   async getMyProfile() {
