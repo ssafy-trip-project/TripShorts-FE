@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onUnmounted, onMounted } from 'vue';
+import { ref, computed, onUnmounted, onMounted } from 'vue';
 import RecordRTC from 'recordrtc';
 import { useRouter } from 'vue-router';
 import { useVideoStore } from '@/stores/videoStore';
@@ -13,6 +13,9 @@ const error = ref(null);
 const showPreviewButton = ref(false);
 const recordedData = ref(null);
 const videoStore = useVideoStore();
+const progress = ref(0);
+let progressInterval;
+const MAX_DURATION = 60; // 최대 녹화 시간 (초)
 
 function getSupportedMimeType() {
   const types = [
@@ -52,6 +55,7 @@ onMounted(async () => {
 });
 
 async function startRecording() {
+  progress.value = 0;
   try {
     showPreviewButton.value = false;
     recordedData.value = null;
@@ -69,6 +73,17 @@ async function startRecording() {
 
     recorder.startRecording();
     recording.value = true;
+
+    // progress 업데이트 간격을 더 짧게 하여 더 부드럽게 만듦
+    const updateInterval = 50; // 50ms마다 업데이트
+    const incrementPerInterval = (100 / MAX_DURATION) * (updateInterval / 1000);
+
+    progressInterval = setInterval(() => {
+      progress.value += incrementPerInterval;
+      if (progress.value >= 100) {
+        stopRecording();
+      }
+    }, updateInterval);
   } catch (error) {
     console.error('카메라 접근 실패:', error);
     alert('카메라 접근에 실패했습니다. 카메라 권한을 확인해주세요.');
@@ -76,6 +91,7 @@ async function startRecording() {
 }
 
 async function stopRecording() {
+  clearInterval(progressInterval);
   if (recorder) {
     recording.value = false;
     return new Promise(resolve => {
@@ -97,6 +113,23 @@ async function stopRecording() {
   }
 }
 
+function resetRecording() {
+  showPreviewButton.value = false;
+  recordedData.value = null;
+  progress.value = 0;
+  recording.value = false;
+}
+
+// progress circle의 style 계산
+const progressStyle = computed(() => {
+  const circumference = 2 * Math.PI * 46; // r=46
+  const offset = circumference - (progress.value / 100) * circumference;
+  return {
+    strokeDasharray: `${circumference} ${circumference}`,
+    strokeDashoffset: offset,
+  };
+});
+
 function goToPreview() {
   if (recordedData.value) {
     router.push({ name: 'video-preview' });
@@ -108,6 +141,7 @@ function cancelRecording() {
 }
 
 onUnmounted(() => {
+  clearInterval(progressInterval);
   if (recorder) {
     recorder.destroy();
     recorder = null;
@@ -138,39 +172,59 @@ onUnmounted(() => {
         class="fullscreen-video"
       ></video>
 
-      <div class="overlay-controls">
-        <v-btn @click="cancelRecording" icon class="close-btn">
+      <!-- 상단 네비게이션 -->
+      <div class="top-controls">
+        <v-btn @click="cancelRecording" icon class="nav-btn">
           <v-icon>mdi-close</v-icon>
         </v-btn>
+      </div>
 
-        <div class="control-buttons">
-          <v-btn
-            v-if="!showPreviewButton"
+      <!-- 녹화 버튼 및 진행 상태 -->
+      <div class="bottom-controls" v-if="!showPreviewButton">
+        <div class="record-button-container">
+          <svg class="progress-ring" width="100" height="100">
+            <circle
+              class="progress-ring__circle"
+              :class="{ active: recording }"
+              stroke="#fe2c55"
+              stroke-width="3"
+              fill="transparent"
+              r="46"
+              cx="50"
+              cy="50"
+              :style="progressStyle"
+            />
+          </svg>
+          <button
+            class="record-button"
             @click="recording ? stopRecording() : startRecording()"
-            :color="recording ? 'error' : 'primary'"
-            rounded
-            class="record-btn"
           >
-            <v-icon left>{{ recording ? 'mdi-stop' : 'mdi-record' }}</v-icon>
-            {{ recording ? '녹화 중지' : '녹화 시작' }}
-          </v-btn>
-
-          <template v-if="showPreviewButton">
-            <v-btn
-              color="primary"
-              rounded
-              class="preview-btn"
-              @click="goToPreview"
-            >
-              <v-icon left>mdi-eye</v-icon>
-              미리보기
-            </v-btn>
-            <v-btn text class="re-record-btn" @click="startRecording">
-              <v-icon left>mdi-refresh</v-icon>
-              다시 녹화
-            </v-btn>
-          </template>
+            <div class="record-button-inner"></div>
+          </button>
         </div>
+      </div>
+
+      <!-- 녹화 완료 후 컨트롤 -->
+      <div v-if="showPreviewButton" class="preview-controls">
+        <v-btn
+          color="primary"
+          rounded="pill"
+          class="preview-btn"
+          @click="goToPreview"
+          elevation="2"
+        >
+          다음
+          <v-icon right>mdi-arrow-right</v-icon>
+        </v-btn>
+        <v-btn
+          variant="tonal"
+          rounded="pill"
+          class="re-record-btn"
+          @click="resetRecording"
+          color="white"
+        >
+          다시 촬영
+        </v-btn>
       </div>
     </div>
   </div>
@@ -199,37 +253,100 @@ onUnmounted(() => {
   object-fit: cover;
 }
 
-.overlay-controls {
+.top-controls {
   position: absolute;
-  bottom: 40px;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+}
+
+.nav-btn {
+  color: white !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(8px);
+}
+
+.bottom-controls {
+  position: absolute;
+  bottom: 0px;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
   padding: 20px;
 }
 
-.close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.5) !important;
-  color: white !important;
-}
-
-.control-buttons {
+.record-button-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
   display: flex;
-  gap: 16px;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
 }
 
-.record-btn,
-.preview-btn,
+.progress-ring {
+  position: absolute;
+  transform: rotate(-90deg);
+  z-index: 1;
+}
+
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.35s linear;
+  transform-origin: 50% 50%;
+}
+
+.record-button {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+.record-button-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  transition: all 0.3s ease;
+}
+
+.preview-controls {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+}
+
+.preview-btn {
+  min-width: 200px !important;
+  height: 44px !important;
+  background: white !important;
+  color: black !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+}
+
 .re-record-btn {
-  padding: 0 30px !important;
-  height: 50px !important;
+  height: 44px !important;
+  min-width: 200px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px;
 }
 
 .error-message {
@@ -237,10 +354,26 @@ onUnmounted(() => {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(244, 67, 54, 0.9);
+  background: rgba(244, 67, 54, 0.95);
   color: white;
-  padding: 10px 20px;
-  border-radius: 4px;
+  padding: 12px 24px;
+  border-radius: 8px;
   z-index: 1001;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+  .bottom-controls {
+    bottom: 0px;
+  }
+
+  .preview-controls {
+    bottom: 0px;
+  }
+
+  .preview-btn,
+  .re-record-btn {
+    min-width: 160px !important;
+  }
 }
 </style>

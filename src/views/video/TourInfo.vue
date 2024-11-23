@@ -178,106 +178,321 @@ async function uploadVideo() {
 
 <template>
   <div class="travel-info-container">
-    <v-card class="travel-info-card">
-      <!-- 초기 로딩 상태 표시 -->
-      <v-overlay v-if="isInitialLoading" absolute>
-        <v-progress-circular indeterminate size="64"></v-progress-circular>
-      </v-overlay>
-      <v-card-title>여행 정보 입력</v-card-title>
+    <!-- 상단 네비게이션 -->
+    <div class="top-nav">
+      <v-btn icon class="nav-btn" @click="$router.back()">
+        <v-icon>mdi-arrow-left</v-icon>
+      </v-btn>
+      <span class="nav-title">공유하기</span>
+      <v-btn
+        class="post-btn"
+        @click="uploadVideo"
+        :loading="isLoading"
+        :disabled="isInitialLoading || !selectedLocation"
+        variant="text"
+      >
+        공유
+      </v-btn>
+    </div>
 
-      <v-card-text>
-        <v-form>
-          <!-- 지역 선택 -->
+    <!-- 메인 콘텐츠 -->
+    <div class="content-section">
+      <div v-if="isInitialLoading" class="loading-overlay">
+        <v-progress-circular indeterminate color="white"></v-progress-circular>
+      </div>
+
+      <div class="location-form">
+        <div class="form-section">
+          <div class="section-title">여행지 정보</div>
+
           <v-select
             v-model="selectedArea"
             :items="areas"
-            label="지역 선택*"
+            label="지역 선택"
             required
             :loading="isInitialLoading"
             :disabled="isInitialLoading"
             @update:model-value="handleAreaChange"
+            variant="outlined"
+            density="comfortable"
+            bg-color="transparent"
+            class="select-field"
           ></v-select>
 
-          <!-- 구역 선택 -->
           <v-select
             v-model="selectedDistrict"
             :items="districts"
-            label="구역 선택*"
+            label="구역 선택"
             required
             :disabled="!selectedArea || districts.length === 0"
             :loading="selectedArea && districts.length === 0"
             @update:model-value="handleDistrictChange"
+            variant="outlined"
+            density="comfortable"
+            bg-color="transparent"
+            class="select-field"
           ></v-select>
 
-          <!-- 관광지 선택 -->
           <v-select
             v-model="selectedLocation"
             :items="tourLocations"
-            label="관광지 선택*"
+            label="관광지 선택"
             required
             :disabled="!selectedDistrict || tourLocations.length === 0"
             :loading="selectedDistrict && tourLocations.length === 0"
             item-title="title"
             item-value="tourId"
             return-object
+            variant="outlined"
+            density="comfortable"
+            bg-color="transparent"
+            class="select-field"
           ></v-select>
+        </div>
 
-          <!-- 선택된 장소 정보 표시 -->
-          <div v-if="selectedLocation" class="selected-location-info">
-            <v-text-field
-              v-model="selectedLocation.address"
-              label="주소"
-              readonly
-              outlined
-              dense
-            ></v-text-field>
+        <div class="location-info" v-if="selectedLocation">
+          <div class="info-header">선택된 장소</div>
+          <div class="location-details">
+            <v-icon color="primary" class="location-icon"
+              >mdi-map-marker</v-icon
+            >
+            <div class="details-text">
+              <div class="location-name">{{ selectedLocation.title }}</div>
+              <div class="location-address">{{ selectedLocation.address }}</div>
+            </div>
           </div>
-
-          <!-- 추가 설명 입력 -->
-          <!-- <v-textarea v-model="description" label="추가 설명" rows="3"></v-textarea> -->
-        </v-form>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn @click="$router.back()" text :disabled="isInitialLoading">
-          이전
-        </v-btn>
-        <v-btn
-          @click="uploadVideo"
-          :loading="isLoading"
-          :disabled="isInitialLoading"
-          color="primary"
-        >
-          등록
-        </v-btn>
-      </v-card-actions>
-    </v-card>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .travel-info-container {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-btn {
+  color: #fe2c55 !important;
+  min-width: 0;
+  padding: 0 16px;
+}
+
+.nav-title {
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.post-btn {
+  color: #fe2c55 !important;
+  font-weight: 600;
+}
+
+.content-section {
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  padding: 24px 16px;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #121212;
-  padding: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 5;
 }
 
-.travel-info-card {
-  width: 100%;
+.location-form {
   max-width: 600px;
-  margin: auto;
-  padding: 20px;
+  margin: 0 auto;
+  color: white;
 }
 
-.selected-location-info {
-  margin-top: 16px;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
+.form-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.select-field {
+  margin-bottom: 20px;
+}
+
+:deep(.v-field) {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  background: rgba(255, 255, 255, 0.08) !important; /* 배경 밝기 증가 */
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important; /* 테두리 더 뚜렷하게 */
+}
+
+:deep(.v-field__input) {
+  color: white !important;
+  font-size: 15px !important;
+  padding: 8px 16px;
+  text-align: center;
+}
+
+:deep(.v-label) {
+  color: rgba(255, 255, 255, 0.85) !important; /* 라벨 색상 더 밝게 */
+  font-size: 15px !important;
+  padding-left: 16px;
+}
+
+:deep(.v-field__outline) {
+  --v-field-border-opacity: 0.1 !important;
+}
+
+:deep(.v-field--variant-outlined .v-field__overlay) {
+  background: rgba(255, 255, 255, 0.08) !important; /* 오버레이 배경도 밝게 */
+  border-radius: 12px !important;
+}
+
+:deep(.v-menu .v-list) {
+  background: rgba(40, 40, 40, 0.95) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+:deep(.v-list-item) {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+:deep(.v-list-item--active) {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+:deep(.v-list-item:hover) {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+:deep(.v-select__selection-text) {
+  color: white !important;
+  text-align: center;
+}
+
+/* placeholder 중앙 정렬 */
+:deep(.v-field__placeholder) {
+  width: 100%;
+  text-align: center;
+}
+
+/* 미선택 상태의 라벨도 중앙으로 */
+:deep(.v-label.v-field-label) {
+  width: 100%;
+  text-align: center;
+  transform-origin: center;
+}
+
+.location-info {
+  background: rgba(255, 255, 255, 0.1); /* 배경색 더 밝게 */
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2); /* 테두리 더 뚜렷하게 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+}
+
+.info-header {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9); /* 더 밝게 */
+  margin-bottom: 16px;
+  font-weight: 600; /* 더 굵게 */
+}
+
+.location-details {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.05); /* 내부 배경 추가 */
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.location-icon {
+  margin-top: 4px;
+  color: #fe2c55 !important; /* 아이콘 색상 강조 */
+  opacity: 1;
+}
+
+.location-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* 텍스트 선명도 개선 */
+}
+
+.location-address {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85); /* 더 밝게 */
+  line-height: 1.4;
+}
+
+.details-text {
+  flex: 1;
+}
+
+.location-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.location-address {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .content-section {
+    padding: 20px 16px;
+  }
+
+  .location-info {
+    padding: 16px;
+    margin-top: 20px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  :deep(.v-field__input) {
+    font-size: 14px !important;
+  }
+
+  :deep(.v-label) {
+    font-size: 14px !important;
+  }
 }
 </style>

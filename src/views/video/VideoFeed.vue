@@ -44,13 +44,13 @@ const showComments = ref(false);
 const currentVideo = ref(null);
 const comments = ref([]);
 const router = useRouter();
+const currentVideoIndex = ref(0);
 
 // 컴포넌트 범위에서 observers 관리
 const observers = ref(new Map());
 
 const isMobile = ref(window.innerWidth <= 768);
 
-// 비디오 데이터를 가져올 때 좋아요 상태도 함께 받아오도록 fetchVideos 수정
 const fetchVideos = async () => {
   if (loading.value || !hasNext.value) return;
 
@@ -65,33 +65,9 @@ const fetchVideos = async () => {
     });
 
     if (response.data && Array.isArray(response.data.videos)) {
-      // 각 비디오의 좋아요 상태 조회
-      const videosWithLikeStatus = await Promise.all(
-        response.data.videos.map(async video => {
-          try {
-            const likeStatus = await api.get(
-              `/api/v1/goods/${video.id}/status`,
-            );
-            return {
-              ...video,
-              liked: likeStatus.data.liked,
-              likeCount: likeStatus.data.totalLikes,
-            };
-          } catch (error) {
-            console.error(
-              `Failed to fetch like status for video ${video.id}:`,
-              error,
-            );
-            return {
-              ...video,
-              liked: false,
-              likeCount: 0,
-            };
-          }
-        }),
-      );
-
-      videos.value = [...videos.value, ...videosWithLikeStatus];
+      // VideoResponse에 이미 liked와 likeCount가 포함되어 있으므로
+      // 추가 API 호출 없이 바로 사용
+      videos.value = [...videos.value, ...response.data.videos];
       nextCursor.value = response.data.nextCursor;
       hasNext.value = response.data.hasNext;
     }
@@ -111,6 +87,20 @@ const setupIntersectionObserver = () => {
           video.play().catch(error => {
             console.log('Video play failed:', error);
           });
+          // 현재 보고 있는 비디오의 인덱스 업데이트
+          const index = videoRefs.value.findIndex(v => v === video);
+          if (index !== -1) {
+            currentVideoIndex.value = index;
+
+            // 현재 비디오 이후 남은 비디오 수 확인
+            const remainingVideos =
+              videos.value.length - (currentVideoIndex.value + 1);
+
+            // 남은 비디오가 3개 이하이고, 추가 데이터가 있다면 새로운 비디오 로드
+            if (remainingVideos <= 3 && hasNext.value && !loading.value) {
+              fetchVideos();
+            }
+          }
         } else {
           video.pause();
         }
@@ -135,15 +125,15 @@ const handleVideoLoaded = (event, index) => {
   }
 };
 
-const handleScroll = async event => {
-  const container = event.target;
-  const scrollPosition = container.scrollTop + container.clientHeight;
-  const scrollHeight = container.scrollHeight;
+// const handleScroll = async event => {
+//   const container = event.target;
+//   const scrollPosition = container.scrollTop + container.clientHeight;
+//   const scrollHeight = container.scrollHeight;
 
-  if (scrollHeight - scrollPosition < 100) {
-    await fetchVideos();
-  }
-};
+//   if (scrollHeight - scrollPosition < 100) {
+//     await fetchVideos();
+//   }
+// };
 
 const toggleLike = async video => {
   try {
