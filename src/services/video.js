@@ -3,8 +3,12 @@ import api from '../api'
 const KAKAO_MAP_KEY = import.meta.env.VITE_KAKAO_MAP_KEY;
 
 class VideoService {
-  static async getVideos() {
-      const response = await api.get('/api/v1/shorts')
+  static async getVideos(sortby) {
+    const response = await api.get('/api/v1/shorts', {
+      params: {
+        sortby
+      }
+    })
     return response.data
   }
 

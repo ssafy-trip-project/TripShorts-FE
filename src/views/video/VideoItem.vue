@@ -4,6 +4,7 @@
       ref="videoRef"
       :src="video.videoUrl"
       :poster="video.thumbnailUrl"
+      :id="video.id"
       class="video-player"
       loop
       muted
@@ -86,8 +87,6 @@ const props = defineProps({
     required: true,
   },
 });
-console.log(props.video);
-console.log(props.video.creator);
 defineEmits(['video-loaded', 'like-click', 'comment-click', 'details-click']);
 
 const togglePlay = event => {
