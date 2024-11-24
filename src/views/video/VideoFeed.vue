@@ -87,6 +87,8 @@ const setupVideoObserver = () => {
             console.log('Video play failed:', error);
           });
 
+          incrementViewCount(video.id);
+
           // 현재 재생 중인 비디오의 인덱스 업데이트
           const index = videoRefs.value.findIndex(v => v === video);
           if (index !== -1) {
@@ -143,6 +145,14 @@ const checkAndLoadMoreVideos = async currentIndex => {
 //     await fetchVideos();
 //   }
 // };
+
+const incrementViewCount = async videoId => {
+  try {
+    await api.post(`/api/v1/shorts/${videoId}/view`);
+  } catch (error) {
+    console.error('Failed to increment view count:', error);
+  }
+};
 
 const toggleLike = async video => {
   try {
