@@ -38,18 +38,24 @@
 
         <!-- 콘텐츠 영역 -->
         <v-col cols="12" md="9">
-          <!-- 카테고리 칩 -->
+          <!-- 정렬 옵션 -->
           <v-row class="mb-4">
             <v-col cols="12" class="d-flex justify-center">
-              <v-chip-group show-arrows>
+              <v-chip-group
+                v-model="selectedSort"
+                selected-class="selected-sort"
+                mandatory
+              >
                 <v-chip
-                  v-for="category in categories"
-                  :key="category"
+                  v-for="sort in sortOptions"
+                  :key="sort.value"
+                  :value="sort.value"
                   variant="outlined"
                   color="#8B4513"
-                  class="category-chip"
+                  class="sort-chip"
+                  @click="handleSort(sort.value)"
                 >
-                  {{ category }}
+                  {{ sort.label }}
                 </v-chip>
               </v-chip-group>
             </v-col>
@@ -111,16 +117,30 @@ const router = useRouter()
 const activeTab = ref('home')
 const videos = ref([])
 
+// 정렬 옵션 정의
+const sortOptions = ref([
+  { label: '최신순', value: 'recent' },
+  { label: '좋아요순', value: 'likes' },
+  { label: '조회순', value: 'views' }
+])
+
+const selectedSort = ref('recent') // 기본값은 최신순
+
 // 비디오 데이터 가져오기
-const fetchVideos = async () => {
+const fetchVideos = async (sortby) => {
   try {
-    const data = await VideoService.getVideos()
+    const data = await VideoService.getVideos(sortby)
     videos.value = data
   } catch (error) {
     console.error('Failed to fetch videos:', error)
   }
 }
 
+// 정렬 처리 함수
+const handleSort = async (sortValue) => {
+  selectedSort.value = sortValue
+  await fetchVideos(sortValue)
+}
 
 
 const userInfo = ref({
@@ -161,30 +181,20 @@ const mobileMenuItems = computed(() => [
     route: '/'
   },
   { 
-    title: '탐색', 
-    icon: 'mdi-compass',
-    route: '/explore'
+    title: '프로필', 
+    icon: 'mdi-account',
+    route: '/profile'
   },
-  { 
-    title: '업로드', 
-    icon: 'mdi-plus-circle',
-    route: '/upload'
+  {
+    title: "동영상 업로드",
+    icon: "mdi-upload",
+    route: "/upload"
   },
   { 
     title: '내 동영상', 
     icon: 'mdi-video',
     route: '/my-videos'
-  },
-  { 
-    title: '프로필', 
-    icon: 'mdi-account',
-    route: '/profile'
   }
-])
-
-const categories = ref([
-  "모두", "노을이 멋진 곳", "여행지", "힐링스팟", "일상생활", 
-  "문화", "음식", "경치", "동물", "쇼핑", "기타"
 ])
 
 onMounted(async () => {
@@ -196,7 +206,7 @@ onMounted(async () => {
       userInfo.value = data
     }
     
-    await fetchVideos() // 비디오 데이터 가져오기
+    await fetchVideos(selectedSort.value) // 비디오 데이터 가져오기
   } catch (error) {
     console.error('Failed to get user info:', error)
     router.push('/login')
@@ -284,6 +294,22 @@ const handleLogout = async () => {
   bottom: 0;
   width: 100%;
   z-index: 100;
+}
+
+.sort-chip {
+  font-size: 0.9rem;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.selected-sort {
+  background-color: #8B4513 !important;
+  color: white !important;
+}
+
+/* 호버 효과 */
+.sort-chip:hover {
+  background-color: rgba(139, 69, 19, 0.1);
 }
 
 @media (max-width: 960px) {
