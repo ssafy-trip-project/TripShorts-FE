@@ -2,7 +2,7 @@
   <div class="bg-black min-h-screen">
     <div class="p-4">
       <!-- Username -->
-      <h1 class="text-white text-xl mb-8">{{ username || '-' }}</h1>
+      <h1 class="text-white text-xl mt-10 ml-10 mb-8">{{ username || '-' }}</h1>
 
       <!-- Post Count -->
       <div class="text-center mb-8">
@@ -17,12 +17,13 @@
         v-for="video in videos"
         :key="video.videoId"
         class="post-image-container"
-        @click="goToVideo(video.videoId)"
+        @click="goToVideoFeed(video.videoId)"
       >
         <img
           :src="video.thumbnailUrl"
           :alt="video.tourName"
           class="post-image"
+          loading="lazy"
         />
       </div>
     </div>
@@ -92,8 +93,23 @@ const fetchVideos = async (cursor = null) => {
   }
 };
 
-const goToVideo = videoId => {
-  router.push(`/shorts/${videoId}`);
+// VideoFeed로 이동하는 함수 수정
+const goToVideoFeed = videoId => {
+  console.log('Navigating to video feed with ID:', videoId);
+  try {
+    router
+      .push({
+        name: 'my-videos-feed',
+        query: {
+          initialVideoId: videoId,
+        },
+      })
+      .catch(err => {
+        console.error('Navigation failed:', err);
+      });
+  } catch (error) {
+    console.error('Error during navigation:', error);
+  }
 };
 
 // Intersection Observer 설정
@@ -141,5 +157,25 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 640px) {
+  .posts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .posts-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+@media (hover: none) {
+  .post-image-container:active .post-image {
+    opacity: 0.8;
+  }
 }
 </style>
