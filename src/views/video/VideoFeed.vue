@@ -254,6 +254,7 @@ onMounted(async () => {
 onUnmounted(() => {
   observers.value.forEach(observer => observer.disconnect());
   observers.value.clear();
+
   window.removeEventListener('keydown', e => {
     if (e.key === 'Escape' && showComments.value) {
       showComments.value = false;
