@@ -3,8 +3,6 @@ name: Deploy Vue App to S3 and Invalidate CloudFront Cache
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 env:
   AWS_REGION: ap-northeast-2
