@@ -87,8 +87,12 @@ const setupIntersectionObserver = () => {
           video.play().catch(error => {
             console.log('Video play failed:', error);
           });
+
+          incrementViewCount(video.id);
+
           // 현재 보고 있는 비디오의 인덱스 업데이트
           const index = videoRefs.value.findIndex(v => v === video);
+
           if (index !== -1) {
             currentVideoIndex.value = index;
 
@@ -125,15 +129,23 @@ const handleVideoLoaded = (event, index) => {
   }
 };
 
-// const handleScroll = async event => {
-//   const container = event.target;
-//   const scrollPosition = container.scrollTop + container.clientHeight;
-//   const scrollHeight = container.scrollHeight;
+const handleScroll = async event => {
+  const container = event.target;
+  const scrollPosition = container.scrollTop + container.clientHeight;
+  const scrollHeight = container.scrollHeight;
 
-//   if (scrollHeight - scrollPosition < 100) {
-//     await fetchVideos();
-//   }
-// };
+  if (scrollHeight - scrollPosition < 100) {
+    await fetchVideos();
+  }
+};
+
+const incrementViewCount = async (videoId) => {
+  try {
+    await api.post(`/api/v1/shorts/${videoId}/view`);
+  } catch (error) {
+    console.error('Failed to increment view count:', error);
+  }
+};
 
 const toggleLike = async video => {
   try {

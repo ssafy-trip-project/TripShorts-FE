@@ -78,10 +78,21 @@
                 ></v-img>
                 <v-card-text class="d-flex align-center justify-space-between py-2">
                   <span class="nickname">{{ video.nickname }}</span>
+
+                  <!-- 좋아요 수 -->
+                  <div class="d-flex align-center me-3">
+                    <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
+                    <span class="count-text">{{ video.likeCount }}</span>
+                  </div>
+                  <!-- 조회수 -->
                   <div class="d-flex align-center">
+                    <v-icon color="#8B4513" size="small" start>mdi-eye</v-icon>
+                    <span class="count-text">{{ video.viewCount }}</span>
+                  </div>
+                  <!-- <div class="d-flex align-center">
                     <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
                     <span class="likes-count">{{ video.likeCount }}</span>
-                  </div>
+                  </div> -->
                 </v-card-text>
 
                 
@@ -278,6 +289,12 @@ const handleLogout = async () => {
 }
 
 .likes-count {
+  color: #8B4513;
+  font-size: 0.9rem;
+  margin-left: 4px;
+}
+
+.count-text {
   color: #8B4513;
   font-size: 0.9rem;
   margin-left: 4px;
