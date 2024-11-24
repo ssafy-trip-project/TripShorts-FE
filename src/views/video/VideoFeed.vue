@@ -1,5 +1,5 @@
 <template>
-  <div class="video-feed" @scroll="handleScroll" ref="feedContainer">
+  <div class="video-feed" ref="feedContainer">
     <div v-if="videos.length === 0" class="empty-state">
       <div class="empty-message">Loading videos...</div>
     </div>
@@ -51,12 +51,13 @@ const observers = ref(new Map());
 
 const isMobile = ref(window.innerWidth <= 768);
 
+const PRELOAD_THRESHOLD = 2;
+
 const fetchVideos = async () => {
   if (loading.value || !hasNext.value) return;
 
   try {
     loading.value = true;
-
     const response = await api.get('/api/v1/shorts/feed', {
       params: {
         cursorId: nextCursor.value,
@@ -65,8 +66,6 @@ const fetchVideos = async () => {
     });
 
     if (response.data && Array.isArray(response.data.videos)) {
-      // VideoResponse에 이미 liked와 likeCount가 포함되어 있으므로
-      // 추가 API 호출 없이 바로 사용
       videos.value = [...videos.value, ...response.data.videos];
       nextCursor.value = response.data.nextCursor;
       hasNext.value = response.data.hasNext;
@@ -78,8 +77,8 @@ const fetchVideos = async () => {
   }
 };
 
-const setupIntersectionObserver = () => {
-  const observer = new IntersectionObserver(
+const setupVideoObserver = () => {
+  const videoObserver = new IntersectionObserver(
     entries => {
       entries.forEach(entry => {
         const video = entry.target;
@@ -90,20 +89,11 @@ const setupIntersectionObserver = () => {
 
           incrementViewCount(video.id);
 
-          // 현재 보고 있는 비디오의 인덱스 업데이트
+          // 현재 재생 중인 비디오의 인덱스 업데이트
           const index = videoRefs.value.findIndex(v => v === video);
-
           if (index !== -1) {
             currentVideoIndex.value = index;
-
-            // 현재 비디오 이후 남은 비디오 수 확인
-            const remainingVideos =
-              videos.value.length - (currentVideoIndex.value + 1);
-
-            // 남은 비디오가 3개 이하이고, 추가 데이터가 있다면 새로운 비디오 로드
-            if (remainingVideos <= 3 && hasNext.value && !loading.value) {
-              fetchVideos();
-            }
+            checkAndLoadMoreVideos(index);
           }
         } else {
           video.pause();
@@ -114,32 +104,49 @@ const setupIntersectionObserver = () => {
       threshold: 0.6,
     },
   );
-
-  observers.value.set('video-observer', observer);
-  return observer;
+  return videoObserver;
 };
 
 const handleVideoLoaded = (event, index) => {
   console.log(`Video ${index} loaded`);
   const video = event.target;
+  videoRefs.value[index] = video;
+
+  // 비디오 observer가 없으면 새로 생성
   const observer =
-    observers.value.get('video-observer') || setupIntersectionObserver();
-  if (observer) {
-    observer.observe(video);
+    observers.value.get('video-observer') || setupVideoObserver();
+
+  // observer를 Map에 저장
+  if (!observers.value.has('video-observer')) {
+    observers.value.set('video-observer', observer);
   }
+
+  // 비디오 엘리먼트 observe 시작
+  observer.observe(video);
 };
 
-const handleScroll = async event => {
-  const container = event.target;
-  const scrollPosition = container.scrollTop + container.clientHeight;
-  const scrollHeight = container.scrollHeight;
+// 현재 인덱스를 기준으로 추가 비디오 로드가 필요한지 확인
+const checkAndLoadMoreVideos = async currentIndex => {
+  const remainingVideos = videos.value.length - (currentIndex + 1);
+  console.log(`현재 인덱스: ${currentIndex}, 남은 비디오: ${remainingVideos}`);
 
-  if (scrollHeight - scrollPosition < 100) {
+  if (remainingVideos <= PRELOAD_THRESHOLD && !loading.value && hasNext.value) {
+    console.log('추가 비디오 로드 시작');
     await fetchVideos();
   }
 };
 
-const incrementViewCount = async (videoId) => {
+// const handleScroll = async event => {
+//   const container = event.target;
+//   const scrollPosition = container.scrollTop + container.clientHeight;
+//   const scrollHeight = container.scrollHeight;
+
+//   if (scrollHeight - scrollPosition < 100) {
+//     await fetchVideos();
+//   }
+// };
+
+const incrementViewCount = async videoId => {
   try {
     await api.post(`/api/v1/shorts/${videoId}/view`);
   } catch (error) {
@@ -230,8 +237,9 @@ watch(showComments, newVal => {
   }
 });
 
-onMounted(() => {
-  fetchVideos();
+onMounted(async () => {
+  await fetchVideos();
+
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape' && showComments.value) {
       showComments.value = false;
