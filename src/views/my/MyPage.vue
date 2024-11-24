@@ -17,26 +17,60 @@
         v-for="video in videos"
         :key="video.videoId"
         class="post-image-container"
-        @click="goToVideoFeed(video.videoId)"
       >
-        <img
-          :src="video.thumbnailUrl"
-          :alt="video.tourName"
-          class="post-image"
-          loading="lazy"
-        />
+        <div class="image-wrapper">
+          <!-- Thumbnail -->
+          <img
+            :src="video.thumbnailUrl"
+            :alt="video.tourName"
+            class="post-image"
+            loading="lazy"
+            @click="goToVideoFeed(video.videoId)"
+          />
+        </div>
+
+        <!-- 삭제 버튼 -->
+        <div class="delete-button-wrapper">
+          <v-btn
+            color="error"
+            variant="text"
+            @click.stop="confirmDelete(video)"
+            class="delete-button"
+          >
+            <v-icon size="20">mdi-delete</v-icon>
+            <span class="ml-2 text-sm">삭제</span>
+          </v-btn>
+        </div>
       </div>
     </div>
 
+    <!-- 삭제 확인 모달 -->
+    <v-dialog v-model="showDeleteModal" max-width="400">
+      <v-card>
+        <v-card-text class="pa-4"> 이 동영상을 삭제하시겠습니까? </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="grey-darken-1"
+            variant="text"
+            @click="showDeleteModal = false"
+          >
+            취소
+          </v-btn>
+          <v-btn color="error" variant="text" @click="deleteVideo">
+            삭제
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Loading State -->
     <div v-if="isLoading" class="flex justify-center items-center py-4">
-      <div
-        class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"
-      ></div>
+      <v-progress-circular indeterminate color="white"></v-progress-circular>
     </div>
 
     <!-- Error State -->
-    <div v-if="error" class="p-4 text-center text-red-500">
+    <div v-if="error" class="p-4 text-center text-error">
       {{ error }}
     </div>
 
@@ -58,6 +92,8 @@ const error = ref(null);
 const nextCursor = ref(null);
 const hasNext = ref(false);
 const observerTarget = ref(null);
+const selectedVideo = ref(null);
+const showDeleteModal = ref(false);
 
 const fetchVideos = async (cursor = null) => {
   if (isLoading.value) return;
@@ -93,7 +129,6 @@ const fetchVideos = async (cursor = null) => {
   }
 };
 
-// VideoFeed로 이동하는 함수 수정
 const goToVideoFeed = videoId => {
   console.log('Navigating to video feed with ID:', videoId);
   try {
@@ -112,6 +147,28 @@ const goToVideoFeed = videoId => {
   }
 };
 
+// 삭제 확인 모달 열기
+const confirmDelete = video => {
+  selectedVideo.value = video;
+  showDeleteModal.value = true;
+};
+
+// 비디오 삭제
+const deleteVideo = async () => {
+  try {
+    console.log('Deleting video with ID:', selectedVideo.value.videoId); // 디버깅 로그 추가
+    await api.delete(`/api/v1/shorts/my-videos/${selectedVideo.value.videoId}`);
+    videos.value = videos.value.filter(
+      v => v.videoId !== selectedVideo.value.videoId,
+    );
+    showDeleteModal.value = false;
+    selectedVideo.value = null;
+  } catch (error) {
+    console.error('Failed to delete video:', error.response || error.message);
+    error.value = '삭제에 실패했습니다. 다시 시도해주세요.';
+  }
+};
+
 // Intersection Observer 설정
 const observer = new IntersectionObserver(
   entries => {
@@ -124,9 +181,7 @@ const observer = new IntersectionObserver(
 
 onMounted(() => {
   fetchVideos();
-});
 
-onMounted(() => {
   if (observerTarget.value) {
     observer.observe(observerTarget.value);
   }
@@ -147,16 +202,30 @@ onUnmounted(() => {
 }
 
 .post-image-container {
+  position: relative;
+  background-color: black;
+}
+
+.image-wrapper {
+  width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
-  background-color: black;
-  cursor: pointer;
 }
 
 .post-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.delete-button-wrapper {
+  text-align: center;
+  margin-top: 4px;
+}
+
+.delete-button {
+  font-size: 0.9rem;
+  color: white !important;
 }
 
 /* 반응형 스타일 */
@@ -170,12 +239,6 @@ onUnmounted(() => {
   .posts-grid {
     max-width: 1200px;
     margin: 0 auto;
-  }
-}
-
-@media (hover: none) {
-  .post-image-container:active .post-image {
-    opacity: 0.8;
   }
 }
 </style>
