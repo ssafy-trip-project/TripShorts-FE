@@ -28,7 +28,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import VideoItem from './VideoItem.vue';
 import CommentDrawer from './CommentDrawer.vue';
 import api from '@/api';
@@ -44,32 +44,39 @@ const showComments = ref(false);
 const currentVideo = ref(null);
 const comments = ref([]);
 const router = useRouter();
+const route = useRoute();
 const currentVideoIndex = ref(0);
 
 // 컴포넌트 범위에서 observers 관리
 const observers = ref(new Map());
-
 const isMobile = ref(window.innerWidth <= 768);
-
 const PRELOAD_THRESHOLD = 2;
 
-const fetchVideos = async () => {
-  if (loading.value || !hasNext.value) return;
+// 초기 비디오 ID를 가져오는 함수
+const getInitialVideoIndex = (videos, initialId) => {
+  return videos.findIndex(video => video.id === initialId);
+};
+
+// VideoFeed.vue script 부분
+const fetchVideos = async (sortBy = 'recent', lastVideoId = null) => {
+  if (loading.value) return;
 
   try {
     loading.value = true;
-    const response = await api.get('/api/v1/shorts/feed', {
-      params: {
-        cursorId: nextCursor.value,
-        size: 5,
-      },
-    });
 
-    if (response.data && Array.isArray(response.data.videos)) {
-      videos.value = [...videos.value, ...response.data.videos];
-      nextCursor.value = response.data.nextCursor;
-      hasNext.value = response.data.hasNext;
-    }
+    const params = {
+      sortby: sortBy,
+      lastid: lastVideoId
+    };
+
+    const response = await api.get('/api/v1/shorts/feed', { params });
+    const newVideos = response.data.videos;
+    const next = response.data.hasNext;
+
+    // 중복 제거 후 추가
+    videos.value = lastVideoId ? [...videos.value, ...newVideos] : newVideos;
+    hasNext.value = next;
+    nextCursor.value = newVideos.length ? newVideos[newVideos.length - 1].id : null;
   } catch (error) {
     console.error('Failed to fetch videos:', error);
   } finally {
@@ -132,19 +139,9 @@ const checkAndLoadMoreVideos = async currentIndex => {
 
   if (remainingVideos <= PRELOAD_THRESHOLD && !loading.value && hasNext.value) {
     console.log('추가 비디오 로드 시작');
-    await fetchVideos();
+    await fetchVideos(route.query.sortBy || 'recent', nextCursor.value);
   }
 };
-
-// const handleScroll = async event => {
-//   const container = event.target;
-//   const scrollPosition = container.scrollTop + container.clientHeight;
-//   const scrollHeight = container.scrollHeight;
-
-//   if (scrollHeight - scrollPosition < 100) {
-//     await fetchVideos();
-//   }
-// };
 
 const incrementViewCount = async videoId => {
   try {
@@ -238,7 +235,12 @@ watch(showComments, newVal => {
 });
 
 onMounted(async () => {
-  await fetchVideos();
+  const initialVideoId = route.query.initialVideoId;
+  const sortBy = route.query.sortBy || 'recent';
+
+  if (initialVideoId) { 
+    await fetchVideos(sortBy, initialVideoId);
+  }
 
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape' && showComments.value) {

@@ -74,7 +74,8 @@
               sm="6"
               lg="4"
             >
-              <v-card class="video-card">
+              <v-card class="video-card"
+              @click="goToVideoFeed(video.videoId)">
                 <v-img
                   :src="video.thumbnailUrl || '/api/placeholder/400/250'"
                   height="200"
@@ -137,6 +138,13 @@ import VideoService from '../services/video';
 const router = useRouter();
 const activeTab = ref('home');
 const videos = ref([]);
+const goToVideoFeed = (videoId) => {
+  console.log('라우터 videoID : ' + videoId)
+  router.push({
+    name: 'videos',
+    query: { initialVideoId: videoId, sortBy: selectedSort.value }
+  });
+};
 
 // 정렬 옵션 정의
 const sortOptions = ref([
@@ -152,6 +160,7 @@ const fetchVideos = async sortby => {
   try {
     const data = await VideoService.getVideos(sortby);
     videos.value = data;
+    console.info(videos.value)
   } catch (error) {
     console.error('Failed to fetch videos:', error);
   }
