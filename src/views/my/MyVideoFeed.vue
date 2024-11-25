@@ -60,31 +60,22 @@ const fetchVideos = async () => {
       size: 5,
     };
 
+    // initialVideoId 파라미터 추가
+    if (route.query.initialVideoId && videos.value.length === 0) {
+      params.initialVideoId = Number(route.query.initialVideoId);
+    }
+
     const response = await api.get('/api/v1/shorts/my-videos/feed', { params });
-
+    console.log(
+      'Response videos: ',
+      response.data.videos.map(v => ({
+        id: v.id,
+        videoId: v.videoId,
+      })),
+    );
     if (response.data && Array.isArray(response.data.videos)) {
-      console.log(response.data);
-      // initialVideoId가 있고 첫 로딩인 경우, 해당 비디오부터 시작
-      if (route.query.initialVideoId && videos.value.length === 0) {
-        const initialVideoIndex = response.data.videos.findIndex(
-          v => v.id === Number(route.query.initialVideoId),
-        );
-
-        if (initialVideoIndex !== -1) {
-          const reorderedVideos = [
-            response.data.videos[initialVideoIndex],
-            ...response.data.videos.slice(0, initialVideoIndex),
-            ...response.data.videos.slice(initialVideoIndex + 1),
-          ];
-          videos.value = reorderedVideos;
-        } else {
-          videos.value = response.data.videos;
-        }
-      } else {
-        // 추가 로딩 또는 initialVideoId가 없는 경우
-        videos.value = [...videos.value, ...response.data.videos];
-      }
-
+      // 재정렬 로직 제거하고 단순히 데이터 추가만
+      videos.value = [...videos.value, ...response.data.videos];
       nextCursor.value = response.data.nextCursor;
       hasNext.value = response.data.hasNext;
     }
