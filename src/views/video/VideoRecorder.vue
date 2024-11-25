@@ -172,22 +172,20 @@ onUnmounted(() => {
         class="fullscreen-video"
       ></video>
 
-      <!-- 상단 네비게이션 -->
       <div class="top-controls">
         <v-btn @click="cancelRecording" icon class="nav-btn">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
 
-      <!-- 녹화 버튼 및 진행 상태 -->
       <div class="bottom-controls" v-if="!showPreviewButton">
         <div class="record-button-container">
           <svg class="progress-ring" width="100" height="100">
             <circle
               class="progress-ring__circle"
               :class="{ active: recording }"
-              stroke="#fe2c55"
-              stroke-width="3"
+              stroke="#FF9933"
+              stroke-width="2"
               fill="transparent"
               r="46"
               cx="50"
@@ -197,14 +195,16 @@ onUnmounted(() => {
           </svg>
           <button
             class="record-button"
+            :class="{ 'is-recording': recording }"
             @click="recording ? stopRecording() : startRecording()"
           >
-            <div class="record-button-inner"></div>
+            <div class="record-button-inner">
+              <div class="record-icon"></div>
+            </div>
           </button>
         </div>
       </div>
 
-      <!-- 녹화 완료 후 컨트롤 -->
       <div v-if="showPreviewButton" class="preview-controls">
         <v-btn
           color="primary"
@@ -237,7 +237,7 @@ onUnmounted(() => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: #000;
+  background: #fff8f0;
   z-index: 1000;
 }
 
@@ -261,8 +261,8 @@ onUnmounted(() => {
 }
 
 .nav-btn {
-  color: white !important;
-  background: rgba(0, 0, 0, 0.3) !important;
+  color: #8b4513 !important;
+  background: rgba(255, 248, 240, 0.3) !important;
   backdrop-filter: blur(8px);
 }
 
@@ -294,27 +294,60 @@ onUnmounted(() => {
 .progress-ring__circle {
   transition: stroke-dashoffset 0.35s linear;
   transform-origin: 50% 50%;
+  opacity: 0.9;
 }
 
 .record-button {
-  width: 70px;
-  height: 70px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: transparent;
   border: none;
-  padding: 4px;
+  padding: 0;
   cursor: pointer;
   position: relative;
   z-index: 2;
+  transition: transform 0.3s ease;
+}
+
+.record-button:active {
+  transform: scale(0.95);
 }
 
 .record-button-inner {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: white;
-  border: 2px solid rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.record-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ff9933;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 153, 51, 0.3);
+}
+
+/* 녹화 중일 때의 스타일 */
+.record-button.is-recording .record-button-inner {
+  background: rgba(255, 153, 51, 0.15);
+  border-color: rgba(255, 153, 51, 0.8);
+}
+
+.record-button.is-recording .record-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #ff9933;
 }
 
 .preview-controls {
@@ -323,7 +356,8 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: center;
   align-items: center;
   gap: 12px;
   padding: 20px;
@@ -332,8 +366,8 @@ onUnmounted(() => {
 .preview-btn {
   min-width: 200px !important;
   height: 44px !important;
-  background: white !important;
-  color: black !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
   font-weight: 600 !important;
   letter-spacing: 0.5px;
 }
@@ -354,8 +388,8 @@ onUnmounted(() => {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(244, 67, 54, 0.95);
-  color: white;
+  background: rgba(255, 153, 51, 0.95);
+  color: #fff8f0;
   padding: 12px 24px;
   border-radius: 8px;
   z-index: 1001;
@@ -363,6 +397,20 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+  .record-button {
+    width: 64px;
+    height: 64px;
+  }
+
+  .record-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .record-button.is-recording .record-icon {
+    width: 18px;
+    height: 18px;
+  }
   .bottom-controls {
     bottom: 0px;
   }
@@ -374,6 +422,8 @@ onUnmounted(() => {
   .preview-btn,
   .re-record-btn {
     min-width: 160px !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 </style>

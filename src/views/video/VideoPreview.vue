@@ -90,7 +90,10 @@ onUnmounted(() => {
 
     <div class="content-section">
       <div class="loading-overlay" v-if="!videoUrl">
-        <v-progress-circular indeterminate color="white"></v-progress-circular>
+        <v-progress-circular
+          indeterminate
+          color="#FF9933"
+        ></v-progress-circular>
       </div>
 
       <div
@@ -118,7 +121,7 @@ onUnmounted(() => {
               alt="영상 썸네일"
             />
           </div>
-          <v-btn class="re-record-btn" @click="reRecord" variant="text">
+          <v-btn class="re-record-btn" @click="reRecord" variant="tonal">
             다시 촬영
           </v-btn>
         </div>
@@ -131,7 +134,7 @@ onUnmounted(() => {
 .preview-container {
   width: 100%;
   height: 100vh;
-  background: #000;
+  background: #fff8f0;
   display: flex;
   flex-direction: column;
 }
@@ -141,25 +144,30 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #fff3e6;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .back-btn {
-  color: #fe2c55 !important;
+  color: #333333 !important;
   min-width: 0;
   padding: 0 16px;
 }
 
 .nav-title {
-  color: white;
+  color: #333333;
   font-size: 16px;
   font-weight: 600;
 }
 
 .next-btn {
-  color: #fe2c55 !important;
-  font-weight: 600;
+  color: #ffffff !important;
+  font-weight: 500;
+  background: #b15c1b !important;
+  border-radius: 24px;
+  padding: 4px 20px !important;
+  letter-spacing: 0.3px;
+  height: 36px !important;
 }
 
 .content-section {
@@ -167,6 +175,7 @@ onUnmounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
+  background: #fff8f0;
 }
 
 .loading-overlay {
@@ -178,26 +187,27 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .preview-video {
   width: 100%;
   height: 65vh;
   object-fit: contain;
-  background: #000;
+  background: #fff8f0;
 }
 
 .thumbnail-section {
-  padding: 12px 16px;
+  padding: 24px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #fff8f0;
 }
 
 .thumbnail-title {
-  color: white;
-  font-size: 14px;
+  color: #333333;
+  font-size: 15px;
   font-weight: 600;
   width: 100px;
 }
@@ -212,21 +222,43 @@ onUnmounted(() => {
   width: 120px;
   height: 160px;
   object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .re-record-btn {
-  color: #fe2c55 !important;
-  font-weight: 600;
+  height: 36px !important;
+  min-width: 100px !important;
+  background: #b15c1b !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
   font-size: 14px;
-  width: 100px;
-  text-align: right;
+  border-radius: 24px !important;
+  text-align: center;
+  transition: all 0.2s ease !important;
+}
+
+.re-record-btn:active {
+  transform: scale(0.98);
+  background: #ebebeb !important;
 }
 
 @media (max-width: 768px) {
   .preview-video {
     height: 50vh;
+  }
+
+  .thumbnail-section {
+    padding: 20px 16px;
+  }
+
+  .preview-thumbnail {
+    width: 90px;
+    height: 120px;
+  }
+
+  .top-nav {
+    padding: 12px 16px;
   }
 }
 </style>
