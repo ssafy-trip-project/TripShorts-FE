@@ -58,7 +58,7 @@ const getInitialVideoIndex = (videos, initialId) => {
 };
 
 // VideoFeed.vue script 부분
-const fetchVideos = async (sortBy = 'recent', lastVideoId = null) => {
+const fetchVideos = async (sortBy = 'recent', cursorId = null) => {
   if (loading.value) return;
 
   try {
@@ -66,17 +66,16 @@ const fetchVideos = async (sortBy = 'recent', lastVideoId = null) => {
 
     const params = {
       sortby: sortBy,
-      lastid: lastVideoId
+      cursorid: Number(cursorId) || nextCursor.value
     };
 
     const response = await api.get('/api/v1/shorts/feed', { params });
     const newVideos = response.data.videos;
-    const next = response.data.hasNext;
 
     // 중복 제거 후 추가
-    videos.value = lastVideoId ? [...videos.value, ...newVideos] : newVideos;
-    hasNext.value = next;
-    nextCursor.value = newVideos.length ? newVideos[newVideos.length - 1].id : null;
+    videos.value = [...videos.value, ...newVideos];
+    hasNext.value = response.data.hasNext;
+    nextCursor.value = response.data.nextCursor;
   } catch (error) {
     console.error('Failed to fetch videos:', error);
   } finally {
