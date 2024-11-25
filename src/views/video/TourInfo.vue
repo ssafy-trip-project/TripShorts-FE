@@ -181,7 +181,7 @@ async function uploadVideo() {
     <!-- 상단 네비게이션 -->
     <div class="top-nav">
       <v-btn icon class="nav-btn" @click="$router.back()">
-        <v-icon>mdi-arrow-left</v-icon>
+        <v-icon size="28">mdi-arrow-left</v-icon>
       </v-btn>
       <span class="nav-title">공유하기</span>
       <v-btn
@@ -271,7 +271,7 @@ async function uploadVideo() {
 .travel-info-container {
   width: 100%;
   min-height: 100vh;
-  background: #000;
+  background: #fff3e6;
   display: flex;
   flex-direction: column;
 }
@@ -281,25 +281,28 @@ async function uploadVideo() {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffeedd;
+  border-bottom: 1px solid rgba(255, 248, 240, 0.2);
 }
 
 .nav-btn {
-  color: #fe2c55 !important;
+  color: #8b4513 !important;
   min-width: 0;
   padding: 0 16px;
 }
 
 .nav-title {
-  color: white;
+  color: #8b4513;
   font-size: 16px;
   font-weight: 600;
 }
 
 .post-btn {
-  color: #fe2c55 !important;
+  color: #fff8f0 !important;
   font-weight: 600;
+  background: #b15c1b !important;
+  border-radius: 20px;
+  padding: 0 16px !important;
 }
 
 .content-section {
@@ -318,14 +321,14 @@ async function uploadVideo() {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(139, 69, 19, 0.8);
   z-index: 5;
 }
 
 .location-form {
   max-width: 600px;
   margin: 0 auto;
-  color: white;
+  color: #8b4513;
 }
 
 .form-section {
@@ -336,7 +339,7 @@ async function uploadVideo() {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 20px;
-  color: white;
+  color: #8b4513;
 }
 
 .select-field {
@@ -344,65 +347,64 @@ async function uploadVideo() {
 }
 
 :deep(.v-field) {
-  border-color: rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
-  background: rgba(255, 255, 255, 0.08) !important; /* 배경 밝기 증가 */
+  border-color: rgba(139, 69, 19, 0.2) !important;
+  color: #8b4513 !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   border-radius: 12px !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important; /* 테두리 더 뚜렷하게 */
+  border: 1px solid rgba(139, 69, 19, 0.15) !important;
 }
 
 :deep(.v-field__input) {
-  color: white !important;
+  color: #8b4513 !important;
   font-size: 15px !important;
   padding: 8px 16px;
   text-align: center;
 }
 
 :deep(.v-label) {
-  color: rgba(255, 255, 255, 0.85) !important; /* 라벨 색상 더 밝게 */
+  color: rgba(139, 69, 19, 0.85) !important;
   font-size: 15px !important;
   padding-left: 16px;
 }
 
 :deep(.v-field__outline) {
-  --v-field-border-opacity: 0.1 !important;
+  --v-field-border-opacity: 0.2 !important;
 }
 
 :deep(.v-field--variant-outlined .v-field__overlay) {
-  background: rgba(255, 255, 255, 0.08) !important; /* 오버레이 배경도 밝게 */
+  background: rgba(255, 255, 255, 0.5) !important;
   border-radius: 12px !important;
 }
 
 :deep(.v-menu .v-list) {
-  background: rgba(40, 40, 40, 0.95) !important;
+  background: rgba(255, 243, 230, 0.95) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(139, 69, 19, 0.15);
 }
 
 :deep(.v-list-item) {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: #8b4513 !important;
 }
 
 :deep(.v-list-item--active) {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(139, 69, 19, 0.1) !important;
 }
 
 :deep(.v-list-item:hover) {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(139, 69, 19, 0.15) !important;
 }
 
 :deep(.v-select__selection-text) {
-  color: white !important;
+  color: #8b4513 !important;
   text-align: center;
 }
 
-/* placeholder 중앙 정렬 */
 :deep(.v-field__placeholder) {
   width: 100%;
   text-align: center;
+  color: rgba(139, 69, 19, 0.6) !important;
 }
 
-/* 미선택 상태의 라벨도 중앙으로 */
 :deep(.v-label.v-field-label) {
   width: 100%;
   text-align: center;
@@ -410,34 +412,34 @@ async function uploadVideo() {
 }
 
 .location-info {
-  background: rgba(255, 255, 255, 0.1); /* 배경색 더 밝게 */
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(12px);
   border-radius: 16px;
   padding: 20px;
   margin-top: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.2); /* 테두리 더 뚜렷하게 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+  border: 1px solid rgba(139, 69, 19, 0.2);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.1);
 }
 
 .info-header {
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.9); /* 더 밝게 */
+  color: #8b4513;
   margin-bottom: 16px;
-  font-weight: 600; /* 더 굵게 */
+  font-weight: 600;
 }
 
 .location-details {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.05); /* 내부 배경 추가 */
+  background: rgba(255, 255, 255, 0.7);
   padding: 12px;
   border-radius: 12px;
 }
 
 .location-icon {
   margin-top: 4px;
-  color: #fe2c55 !important; /* 아이콘 색상 강조 */
+  color: #b15c1b !important;
   opacity: 1;
 }
 
@@ -445,31 +447,17 @@ async function uploadVideo() {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* 텍스트 선명도 개선 */
+  color: #8b4513;
 }
 
 .location-address {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.85); /* 더 밝게 */
+  color: rgba(139, 69, 19, 0.85);
   line-height: 1.4;
 }
 
 .details-text {
   flex: 1;
-}
-
-.location-name {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: white;
-}
-
-.location-address {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.4;
 }
 
 @media (max-width: 768px) {

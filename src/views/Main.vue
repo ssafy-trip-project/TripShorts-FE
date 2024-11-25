@@ -23,14 +23,18 @@
                 <template v-slot:prepend>
                   <v-icon color="#8B4513">{{ menu.icon }}</v-icon>
                 </template>
-                <v-list-item-title class="menu-text">{{ menu.title }}</v-list-item-title>
+                <v-list-item-title class="menu-text">{{
+                  menu.title
+                }}</v-list-item-title>
               </v-list-item>
 
               <v-list-item @click="handleLogout" class="menu-item">
                 <template v-slot:prepend>
                   <v-icon color="#8B4513">mdi-logout</v-icon>
                 </template>
-                <v-list-item-title class="menu-text">로그아웃</v-list-item-title>
+                <v-list-item-title class="menu-text"
+                  >로그아웃</v-list-item-title
+                >
               </v-list-item>
             </v-list>
           </v-card>
@@ -76,25 +80,29 @@
                   height="200"
                   cover
                 ></v-img>
-                <v-card-text class="d-flex align-center justify-space-between py-2">
+                <v-card-text
+                  class="d-flex align-center justify-space-between py-2"
+                >
                   <span class="nickname">{{ video.nickname }}</span>
 
                   <!-- 좋아요 수와 조회수를 감싸는 div -->
                   <div class="d-flex align-center">
                     <!-- 좋아요 수 -->
                     <div class="d-flex align-center me-3">
-                      <v-icon color="#FF9933" size="small" start>mdi-heart</v-icon>
+                      <v-icon color="#FF9933" size="small" start
+                        >mdi-heart</v-icon
+                      >
                       <span class="count-text">{{ video.likeCount }}</span>
                     </div>
                     <!-- 조회수 -->
                     <div class="d-flex align-center">
-                      <v-icon color="#8B4513" size="small" start>mdi-eye</v-icon>
+                      <v-icon color="#8B4513" size="small" start
+                        >mdi-eye</v-icon
+                      >
                       <span class="count-text">{{ video.viewCount }}</span>
                     </div>
                   </div>
                 </v-card-text>
-
-                
               </v-card>
             </v-col>
           </v-row>
@@ -108,7 +116,11 @@
       color="#FF9933"
       class="d-md-none mobile-nav"
     >
-      <v-btn v-for="menu in mobileMenuItems" :key="menu.title" :value="menu.route">
+      <v-btn
+        v-for="menu in mobileMenuItems"
+        :key="menu.title"
+        :value="menu.route"
+      >
         <v-icon>{{ menu.icon }}</v-icon>
         {{ menu.title }}
       </v-btn>
@@ -116,117 +128,115 @@
   </div>
 </template>
 
-
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import AuthService from '../services/auth'
-import VideoService from '../services/video'
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import AuthService from '../services/auth';
+import VideoService from '../services/video';
 
-const router = useRouter()
-const activeTab = ref('home')
-const videos = ref([])
+const router = useRouter();
+const activeTab = ref('home');
+const videos = ref([]);
 
 // 정렬 옵션 정의
 const sortOptions = ref([
   { label: '최신순', value: 'recent' },
   { label: '좋아요순', value: 'likes' },
-  { label: '조회순', value: 'views' }
-])
+  { label: '조회순', value: 'views' },
+]);
 
-const selectedSort = ref('recent') // 기본값은 최신순
+const selectedSort = ref('recent'); // 기본값은 최신순
 
 // 비디오 데이터 가져오기
-const fetchVideos = async (sortby) => {
+const fetchVideos = async sortby => {
   try {
-    const data = await VideoService.getVideos(sortby)
-    videos.value = data
+    const data = await VideoService.getVideos(sortby);
+    videos.value = data;
   } catch (error) {
-    console.error('Failed to fetch videos:', error)
+    console.error('Failed to fetch videos:', error);
   }
-}
+};
 
 // 정렬 처리 함수
-const handleSort = async (sortValue) => {
-  selectedSort.value = sortValue
-  await fetchVideos(sortValue)
-}
-
+const handleSort = async sortValue => {
+  selectedSort.value = sortValue;
+  await fetchVideos(sortValue);
+};
 
 const userInfo = ref({
   email: '',
-  nickname: ''
-})
+  nickname: '',
+});
 
 const menuItems = ref([
-  { 
-    title: '홈', 
+  {
+    title: '홈',
     icon: 'mdi-home',
     route: '/',
-    mobileOnly: false
+    mobileOnly: false,
   },
   {
-    title: "동영상 업로드",
-    icon: "mdi-upload",
-    route: "/upload",
+    title: '동영상 업로드',
+    icon: 'mdi-upload',
+    route: '/upload',
   },
-  { 
-    title: '내 동영상', 
+  {
+    title: '내 동영상',
     icon: 'mdi-video',
     route: '/my-videos',
-    mobileOnly: false
-  }
-])
+    mobileOnly: false,
+  },
+]);
 
 const mobileMenuItems = computed(() => [
-  { 
-    title: '홈', 
+  {
+    title: '홈',
     icon: 'mdi-home',
-    route: '/'
+    route: '/',
   },
   {
-    title: "동영상 업로드",
-    icon: "mdi-upload",
-    route: "/upload"
+    title: '동영상 업로드',
+    icon: 'mdi-upload',
+    route: '/upload',
   },
-  { 
-    title: '내 동영상', 
+  {
+    title: '내 동영상',
     icon: 'mdi-video',
-    route: '/my-videos'
-  }
-])
+    route: '/my-videos',
+  },
+]);
 
 onMounted(async () => {
   try {
     // 토큰이 있는 경우에만 유저 정보 조회
-    const token = AuthService.getAccessToken()
+    const token = AuthService.getAccessToken();
     if (token) {
-      const data = await AuthService.getUserInfo()
-      userInfo.value = data
+      const data = await AuthService.getUserInfo();
+      userInfo.value = data;
     }
-    
-    await fetchVideos(selectedSort.value) // 비디오 데이터 가져오기
+
+    await fetchVideos(selectedSort.value); // 비디오 데이터 가져오기
   } catch (error) {
-    console.error('Failed to get user info:', error)
-    router.push('/login')
+    console.error('Failed to get user info:', error);
+    router.push('/login');
   }
-})
+});
 
 const handleLogout = async () => {
   try {
-    await AuthService.logout()
-    router.push('/login')
+    await AuthService.logout();
+    router.push('/login');
   } catch (error) {
-    console.error('Logout failed:', error)
+    console.error('Logout failed:', error);
   }
-}
+};
 </script>
 
 <style scoped>
 .main-container {
-  background-color: #FFF8F0;
+  background-color: #fff8f0;
   min-height: 100vh;
-  padding-bottom: 56px;  /* 모바일 하단 네비게이션 높이만큼 패딩 */
+  padding-bottom: 56px; /* 모바일 하단 네비게이션 높이만큼 패딩 */
 }
 
 .profile-card {
@@ -234,7 +244,7 @@ const handleLogout = async () => {
 }
 
 .user-name {
-  color: #8B4513;
+  color: #8b4513;
   font-size: 1.3rem;
   font-weight: 500;
 }
@@ -252,7 +262,7 @@ const handleLogout = async () => {
 }
 
 .menu-text {
-  color: #8B4513;
+  color: #8b4513;
 }
 
 .menu-item:hover {
@@ -277,19 +287,19 @@ const handleLogout = async () => {
 }
 
 .likes-count {
-  color: #8B4513;
+  color: #8b4513;
   font-size: 0.9rem;
   margin-left: 4px;
 }
 
 .count-text {
-  color: #8B4513;
+  color: #8b4513;
   font-size: 0.9rem;
   margin-left: 4px;
 }
 
-.nickname{
-  color: #8B4513;
+.nickname {
+  color: #8b4513;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -308,7 +318,7 @@ const handleLogout = async () => {
 }
 
 .selected-sort {
-  background-color: #8B4513 !important;
+  background-color: #8b4513 !important;
   color: white !important;
 }
 
@@ -321,7 +331,7 @@ const handleLogout = async () => {
   .user-name {
     font-size: 1.1rem;
   }
-  
+
   .main-container {
     padding-bottom: 80px;
   }
