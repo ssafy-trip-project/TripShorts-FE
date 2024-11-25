@@ -1,36 +1,30 @@
 <template>
-    <v-container class="profile-container pa-4">
-      <v-card class="mx-auto profile-card" max-width="600" color="#FFF8F0" elevation="2">
+  <div class="page-container"> <!-- 최상위 컨테이너 추가 -->
+    <v-container class="profile-container pa-0">
+      <v-card class="mx-auto profile-card" max-width="600" color="#FFF8F0" elevation="0" width="100%">
+        <!-- 뒤로가기 버튼 -->
+       <div class="back-btn-wrapper">
+         <v-btn
+           icon="mdi-arrow-left"
+           size="small"
+           color="#8B4513"
+           variant="text"
+           @click="router.back()"
+         ></v-btn>
+       </div>
         <v-card-text class="text-center pt-6">
-          <!-- 로딩 표시 -->
-          <v-overlay
-            v-if="loading"
-            contained
-            class="align-center justify-center"
-          >
-            <v-progress-circular
-              indeterminate
-              color="#FF9933"
-            ></v-progress-circular>
-          </v-overlay>
-  
+          <!-- 프로필 이미지 섹션 수정 -->
           <div class="profile-image-container mb-4">
             <v-avatar size="120" class="profile-avatar">
               <v-img :src="profileData.imageUrl || '/default-avatar.png'" alt="프로필 이미지">
                 <template v-slot:placeholder>
                   <v-icon size="60" color="#8B4513">mdi-account</v-icon>
                 </template>
+                <!-- 오버레이와 편집 버튼 -->
+                <div class="image-overlay" @click="triggerImageUpload">
+                  <span class="edit-text">사진 변경</span>
+                </div>
               </v-img>
-              
-              <v-btn
-                class="edit-image-btn"
-                icon="mdi-camera"
-                size="small"
-                color="#FF9933"
-                variant="flat"
-                @click="triggerImageUpload"
-                :loading="uploadingImage"
-              ></v-btn>
             </v-avatar>
             <input
               type="file"
@@ -52,37 +46,40 @@
                 v-model="editedNickname"
                 variant="outlined"
                 density="compact"
-                class="mt-2"
+                class="mt-0" 
+                height="32"
                 style="max-width: 200px"
                 :rules="[v => !!v || '닉네임을 입력해주세요']"
                 @keyup.enter="saveNickname"
+                hide-details
               ></v-text-field>
               <v-btn
                 icon
-                size="small"
+                size="x-small"
                 class="ml-2"
                 :color="isEditingNickname ? '#FF9933' : '#8B4513'"
                 @click="isEditingNickname ? saveNickname() : startEditingNickname()"
                 :loading="updatingNickname"
               >
-                <v-icon>{{ isEditingNickname ? 'mdi-check' : 'mdi-pencil' }}</v-icon>
+                <v-icon size="16">{{ isEditingNickname ? 'mdi-check' : 'mdi-pencil' }}</v-icon>
               </v-btn>
             </div>
             <div class="text-subtitle-2 mt-1" style="color: #8B4513">{{ profileData.email }}</div>
           </div>
   
-          <v-divider class="mb-4" color="#FF9933" thickness="2"></v-divider>
-  
           <!-- 회원탈퇴 버튼 -->
-          <v-btn
-            color="#8B4513"
-            variant="text"
-            class="mt-4"
-            @click="showDeleteDialog = true"
-            :loading="deleting"
-          >
-            회원탈퇴
-          </v-btn>
+          <div class="delete-account-section">
+            <v-btn
+              color="#8B4513"
+              variant="outlined"
+              class="delete-account-btn"
+              @click="showDeleteDialog = true"
+              :loading="deleting"
+              prepend-icon="mdi-account-remove"
+            >
+              회원탈퇴
+            </v-btn>
+          </div>
         </v-card-text>
       </v-card>
   
@@ -93,7 +90,7 @@
             정말 탈퇴하시겠습니까?
           </v-card-title>
           <v-card-text style="color: #8B4513">
-            탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.
+            탈퇴 시 모든 데이터가 삭제되며 <br> 복구할 수 없습니다.
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -124,6 +121,7 @@
         {{ snackbar.text }}
       </v-snackbar>
     </v-container>
+  </div>
   </template>
   
   <script setup>
@@ -249,33 +247,61 @@
   </script>
   
   <style scoped>
-  .profile-container {
-    background-color: #FFF8F0;
-    min-height: 100vh;
-  }
-  
-  .profile-card {
-    border-radius: 16px;
-  }
-  
-  .profile-image-container {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .profile-avatar {
-    border: 3px solid #FF9933;
-  }
-  
-  .edit-image-btn {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    background-color: white !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
-  
-  .nickname-section {
-    position: relative;
-  }
-  </style>
+.page-container {
+  background-color: #FFF8F0;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.profile-container {
+  width: 80%;
+}
+
+.profile-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-avatar {
+  border: 3px solid #FF9933;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(139, 69, 19, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.profile-avatar:hover .image-overlay {
+  opacity: 1;
+}
+
+.edit-text {
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.delete-account-btn {
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+.back-btn-wrapper {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+</style>
