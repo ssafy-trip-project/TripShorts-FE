@@ -8,7 +8,6 @@ import VideoFeed from '@/views/video/VideoFeed.vue';
 import VideoPreview from '@/views/video/VideoPreview.vue';
 import VideoDetail from '@/views/video/VideoDetail.vue';
 import TourInfo from '@/views/video/TourInfo.vue';
-import Profile from '@/views/my/Profile.vue';
 import MyPage from '@/views/my/MyPage.vue';
 import MyVideoFeed from '@/views/my/MyVideoFeed.vue';
 
@@ -57,11 +56,6 @@ const router = createRouter({
       path: '/video/detail',
       name: 'VideoDetail',
       component: VideoDetail,
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: Profile,
     },
     {
       path: '/my-videos',

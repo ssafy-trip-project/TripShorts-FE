@@ -165,12 +165,6 @@ const menuItems = ref([
     route: '/',
     mobileOnly: false
   },
-  { 
-    title: '프로필', 
-    icon: 'mdi-account',
-    route: '/profile',
-    mobileOnly: false
-  },
   {
     title: "동영상 업로드",
     icon: "mdi-upload",
@@ -189,11 +183,6 @@ const mobileMenuItems = computed(() => [
     title: '홈', 
     icon: 'mdi-home',
     route: '/'
-  },
-  { 
-    title: '프로필', 
-    icon: 'mdi-account',
-    route: '/profile'
   },
   {
     title: "동영상 업로드",
