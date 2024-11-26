@@ -24,7 +24,11 @@
                 <v-icon size="60" color="#8B4513">mdi-account</v-icon>
               </template>
               <!-- my가 true일 때만 이미지 수정 오버레이 표시 -->
-              <div v-if="profileData.my" class="image-overlay" @click="triggerImageUpload">
+              <div
+                v-if="profileData.my"
+                class="image-overlay"
+                @click="triggerImageUpload"
+              >
                 <span class="edit-text">사진 변경</span>
               </div>
             </v-img>
@@ -139,7 +143,6 @@
       <div v-if="error" class="p-4 text-center text-error">
         {{ error }}
       </div>
-
     </div>
 
     <!-- Delete Account Button -->
@@ -246,7 +249,7 @@ const snackbar = ref({
 });
 
 // Profile methods
-const loadProfile = async (id) => {
+const loadProfile = async id => {
   try {
     const data = await memberService.getMyProfile(id);
     profileData.value = data;
@@ -308,20 +311,21 @@ const deleteAccount = async () => {
 };
 
 // Videos methods
-const fetchVideos = async (id) => {
+const fetchVideos = async id => {
   if (isLoading.value) return;
 
   try {
     isLoading.value = true;
     error.value = null;
 
-    const url = id ? `/api/v1/shorts/my-videos?id=${id}` : '/api/v1/shorts/my-videos';
+    const url = id
+      ? `/api/v1/shorts/my-videos?id=${id}`
+      : '/api/v1/shorts/my-videos';
     const response = await api.get(url);
 
     videos.value = [...videos.value, ...response.data];
 
-    console.log(videos.value)
-
+    console.log(videos.value);
   } catch (e) {
     console.error('Failed to fetch videos:', e);
     error.value = '동영상을 불러오는데 실패했습니다. 다시 시도해주세요.';
@@ -330,11 +334,15 @@ const fetchVideos = async (id) => {
   }
 };
 
+const targetId = route.query.id;
 const goToVideoFeed = videoId => {
   console.log('videoit = ', videoId);
   router.push({
     name: 'my-videos-feed',
-    query: { initialVideoId: videoId },
+    query: {
+      initialVideoId: videoId,
+      targetId: targetId,
+    },
   });
 };
 
@@ -374,12 +382,10 @@ const showError = text => {
   };
 };
 
-
 onMounted(() => {
   loadProfile(route.query.id);
   fetchVideos(route.query.id);
 });
-
 </script>
 
 <style scoped>
