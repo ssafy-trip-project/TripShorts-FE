@@ -158,6 +158,15 @@ const addComment = async content => {
       `/api/v1/shorts/${currentVideo.value.id}/comments`,
     );
     comments.value = response.data;
+    const videoIndex = videos.value.findIndex(
+      v => v.id === currentVideo.value.id,
+    );
+    if (videoIndex !== -1) {
+      videos.value[videoIndex] = {
+        ...videos.value[videoIndex],
+        commentCount: videos.value[videoIndex].commentCount + 1,
+      };
+    }
   } catch (error) {
     console.error('Failed to add comment:', error);
   }
@@ -183,8 +192,18 @@ onUnmounted(() => {
 <template>
   <div class="video-feed" ref="feedContainer">
     <div class="back-button" @click="router.back()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M19 12H5M12 19l-7-7 7-7" />
       </svg>
     </div>
 
@@ -247,6 +266,15 @@ onUnmounted(() => {
   background: black;
   position: relative;
   -webkit-overflow-scrolling: touch;
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .video-container {
@@ -345,6 +373,11 @@ onUnmounted(() => {
     left: 12px;
     width: 36px;
     height: 36px;
+  }
+
+  .video-feed {
+    /* 모바일 Safari에서 전체 화면 스크롤 개선 */
+    height: -webkit-fill-available;
   }
 }
 
