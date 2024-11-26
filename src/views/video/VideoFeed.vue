@@ -244,6 +244,16 @@ const addComment = async content => {
       `/api/v1/shorts/${currentVideo.value.id}/comments`,
     );
     comments.value = response.data;
+
+    const videoIndex = videos.value.findIndex(
+      v => v.id === currentVideo.value.id,
+    );
+    if (videoIndex !== -1) {
+      videos.value[videoIndex] = {
+        ...videos.value[videoIndex],
+        commentCount: videos.value[videoIndex].commentCount + 1,
+      };
+    }
   } catch (error) {
     console.error('Failed to add comment:', error);
   }
