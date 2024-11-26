@@ -16,7 +16,10 @@
         <!-- Profile Image -->
         <div class="profile-image-container">
           <v-avatar size="120" class="profile-avatar">
-            <v-img :src="profileData.imageUrl || '/default-avatar.png'" alt="프로필 이미지">
+            <v-img
+              :src="profileData.imageUrl || '/default-avatar.png'"
+              alt="프로필 이미지"
+            >
               <template v-slot:placeholder>
                 <v-icon size="60" color="#8B4513">mdi-account</v-icon>
               </template>
@@ -57,13 +60,19 @@
               size="x-small"
               class="ml-2"
               :color="isEditingNickname ? '#FF9933' : '#8B4513'"
-              @click="isEditingNickname ? saveNickname() : startEditingNickname()"
+              @click="
+                isEditingNickname ? saveNickname() : startEditingNickname()
+              "
               :loading="updatingNickname"
             >
-              <v-icon size="16">{{ isEditingNickname ? 'mdi-check' : 'mdi-pencil' }}</v-icon>
+              <v-icon size="16">{{
+                isEditingNickname ? 'mdi-check' : 'mdi-pencil'
+              }}</v-icon>
             </v-btn>
           </div>
-          <div class="text-subtitle-2 text-brown mt-1">{{ profileData.email }}</div>
+          <div class="text-subtitle-2 text-brown mt-1">
+            {{ profileData.email }}
+          </div>
         </div>
 
         <!-- Post Count -->
@@ -86,10 +95,7 @@
           @mouseenter="hoveredVideo = video.videoId"
           @mouseleave="hoveredVideo = null"
         >
-          <div 
-            class="image-wrapper"
-            @click="goToVideoFeed(video.videoId)"
-          >
+          <div class="image-wrapper" @click="goToVideoFeed(video.videoId)">
             <img
               :src="video.thumbnailUrl"
               :alt="video.tourName"
@@ -98,16 +104,12 @@
             />
             <!-- 재생 아이콘 오버레이 -->
             <div class="play-overlay">
-              <v-icon 
-                color="white" 
-                size="32"
-                class="play-icon"
-              >
+              <v-icon color="white" size="32" class="play-icon">
                 mdi-play-circle
               </v-icon>
             </div>
           </div>
-          
+
           <!-- 삭제 버튼 (오른쪽 상단에 고정) -->
           <v-btn
             v-show="hoveredVideo === video.videoId"
@@ -124,7 +126,10 @@
 
       <!-- Loading State -->
       <div v-if="isLoading" class="flex justify-center items-center py-4">
-        <v-progress-circular indeterminate color="#8B4513"></v-progress-circular>
+        <v-progress-circular
+          indeterminate
+          color="#8B4513"
+        ></v-progress-circular>
       </div>
 
       <!-- Error State -->
@@ -156,7 +161,11 @@
         <v-card-text class="pa-4">이 동영상을 삭제하시겠습니까?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="grey-darken-1" variant="text" @click="showDeleteModal = false">
+          <v-btn
+            color="grey-darken-1"
+            variant="text"
+            @click="showDeleteModal = false"
+          >
             취소
           </v-btn>
           <v-btn color="#FF9933" variant="text" @click="deleteVideo">
@@ -172,11 +181,16 @@
           정말 탈퇴하시겠습니까?
         </v-card-title>
         <v-card-text class="text-brown">
-          탈퇴 시 모든 데이터가 삭제되며 <br> 복구할 수 없습니다.
+          탈퇴 시 모든 데이터가 삭제되며 <br />
+          복구할 수 없습니다.
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="#8B4513" variant="text" @click="showDeleteDialog = false">
+          <v-btn
+            color="#8B4513"
+            variant="text"
+            @click="showDeleteDialog = false"
+          >
             취소
           </v-btn>
           <v-btn color="#FF9933" @click="deleteAccount" :loading="deleting">
@@ -205,7 +219,7 @@ const router = useRouter();
 const profileData = ref({
   email: '',
   nickname: '',
-  imageUrl: ''
+  imageUrl: '',
 });
 const isEditingNickname = ref(false);
 const editedNickname = ref('');
@@ -229,7 +243,7 @@ const showDeleteModal = ref(false);
 const snackbar = ref({
   show: false,
   text: '',
-  color: 'success'
+  color: 'success',
 });
 
 // Profile methods
@@ -246,7 +260,7 @@ const triggerImageUpload = () => {
   fileInput.value.click();
 };
 
-const handleImageChange = async (event) => {
+const handleImageChange = async event => {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -306,7 +320,9 @@ const fetchVideos = async (cursor = null) => {
     params.append('size', '12');
     if (cursor) params.append('cursorId', cursor);
 
-    const response = await api.get(`/api/v1/shorts/my-videos?${params.toString()}`);
+    const response = await api.get(
+      `/api/v1/shorts/my-videos?${params.toString()}`,
+    );
 
     if (cursor === null) {
       videos.value = response.data.videos;
@@ -324,14 +340,15 @@ const fetchVideos = async (cursor = null) => {
   }
 };
 
-const goToVideoFeed = (videoId) => {
+const goToVideoFeed = videoId => {
+  console.log('videoit = ', videoId);
   router.push({
     name: 'my-videos-feed',
     query: { initialVideoId: videoId },
   });
 };
 
-const confirmDelete = (video) => {
+const confirmDelete = video => {
   selectedVideo.value = video;
   showDeleteModal.value = true;
 };
@@ -339,7 +356,9 @@ const confirmDelete = (video) => {
 const deleteVideo = async () => {
   try {
     await api.delete(`/api/v1/shorts/my-videos/${selectedVideo.value.videoId}`);
-    videos.value = videos.value.filter(v => v.videoId !== selectedVideo.value.videoId);
+    videos.value = videos.value.filter(
+      v => v.videoId !== selectedVideo.value.videoId,
+    );
     showDeleteModal.value = false;
     selectedVideo.value = null;
   } catch (error) {
@@ -349,30 +368,30 @@ const deleteVideo = async () => {
 };
 
 // Utility methods
-const showSuccess = (text) => {
+const showSuccess = text => {
   snackbar.value = {
     show: true,
     text,
-    color: 'success'
+    color: 'success',
   };
 };
 
-const showError = (text) => {
+const showError = text => {
   snackbar.value = {
     show: true,
     text,
-    color: 'error'
+    color: 'error',
   };
 };
 
 // Intersection Observer
 const observer = new IntersectionObserver(
-  (entries) => {
+  entries => {
     if (entries[0].isIntersecting && hasNext.value && !isLoading.value) {
       fetchVideos(nextCursor.value);
     }
   },
-  { threshold: 0.5 }
+  { threshold: 0.5 },
 );
 
 onMounted(() => {
@@ -390,7 +409,7 @@ onUnmounted(() => {
 
 <style scoped>
 .page-container {
-  background-color: #FFF8F0;
+  background-color: #fff8f0;
   min-height: 100vh;
   width: 100%;
 }
@@ -419,7 +438,7 @@ onUnmounted(() => {
 }
 
 .profile-avatar {
-  border: 3px solid #FF9933;
+  border: 3px solid #ff9933;
 }
 
 .image-overlay {
@@ -453,11 +472,11 @@ onUnmounted(() => {
 }
 
 .text-brown {
-  color: #8B4513;
+  color: #8b4513;
 }
 
 .text-brown-lighter {
-  color: #A67B5B;
+  color: #a67b5b;
 }
 
 .post-count-section {
@@ -467,14 +486,14 @@ onUnmounted(() => {
 
 .videos-section {
   padding: 2rem;
-  background-color: #FFF8F0;
+  background-color: #fff8f0;
 }
 
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  background-color: #FFF8F0;
+  background-color: #fff8f0;
   padding: 0;
   margin: 0 auto;
   max-width: 900px;
@@ -482,7 +501,7 @@ onUnmounted(() => {
 
 .post-image-container {
   position: relative;
-  background-color: #FFF8F0;
+  background-color: #fff8f0;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(139, 69, 19, 0.1);
@@ -555,7 +574,6 @@ onUnmounted(() => {
   transition: transform 0.3s ease;
 }
 
-
 .delete-button-wrapper {
   text-align: center;
   margin-top: 0.5rem;
@@ -573,7 +591,7 @@ onUnmounted(() => {
   backdrop-filter: blur(4px);
   z-index: 2;
   transition: all 0.3s ease !important;
-  
+
   &:hover {
     background: rgba(255, 59, 59, 0.8) !important;
     transform: scale(1.1);
@@ -581,7 +599,7 @@ onUnmounted(() => {
 }
 
 .delete-button:hover {
-  color: #FF9933 !important;
+  color: #ff9933 !important;
 }
 
 .delete-account-section {
@@ -610,7 +628,7 @@ onUnmounted(() => {
 
 .error-state {
   text-align: center;
-  color: #FF5252;
+  color: #ff5252;
   padding: 1rem;
   margin: 1rem;
 }
@@ -644,7 +662,7 @@ onUnmounted(() => {
 
 @media (max-width: 480px) {
   .posts-grid {
-    grid-template-columns: repeat(2, 1fr);  /* 모바일에서도 2열 유지 */
+    grid-template-columns: repeat(2, 1fr); /* 모바일에서도 2열 유지 */
     gap: 8px;
     max-width: 100%;
   }
@@ -674,20 +692,20 @@ onUnmounted(() => {
 
 /* 다이얼로그 스타일 */
 :deep(.v-dialog) {
-  background-color: #FFF8F0;
+  background-color: #fff8f0;
   border-radius: 8px;
 }
 
 :deep(.v-card) {
-  background-color: #FFF8F0;
+  background-color: #fff8f0;
 }
 
 :deep(.v-card-title) {
-  color: #8B4513;
+  color: #8b4513;
 }
 
 :deep(.v-card-text) {
-  color: #8B4513;
+  color: #8b4513;
 }
 
 /* 스낵바 스타일 */
@@ -699,10 +717,11 @@ onUnmounted(() => {
 :deep(.v-text-field) {
   .v-input__control {
     .v-field {
-      border-color: #8B4513;
-      
-      &:hover, &:focus {
-        border-color: #FF9933;
+      border-color: #8b4513;
+
+      &:hover,
+      &:focus {
+        border-color: #ff9933;
       }
     }
   }
@@ -712,13 +731,13 @@ onUnmounted(() => {
 :deep(.v-btn) {
   text-transform: none;
   letter-spacing: 0.5px;
-  
+
   &.primary {
-    background-color: #8B4513;
+    background-color: #8b4513;
     color: white;
-    
+
     &:hover {
-      background-color: #FF9933;
+      background-color: #ff9933;
     }
   }
 }
@@ -733,7 +752,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 900px;
   height: 1px;
-  background-color: #E5D3B3;
+  background-color: #e5d3b3;
   margin: 0.5rem auto;
 }
 </style>
