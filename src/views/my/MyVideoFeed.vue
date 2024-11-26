@@ -112,6 +112,7 @@ const setupVideoObserver = () => {
           );
           if (index !== -1) {
             currentVideoIndex.value = index;
+            incrementViewCount(videos.value[index].id);
           }
         } else {
           video.pause();
@@ -136,6 +137,14 @@ const handleVideoLoaded = (event, index) => {
   }
 
   observer.observe(video);
+};
+
+const incrementViewCount = async videoId => {
+  try {
+    await api.post(`/api/v1/shorts/${videoId}/view`);
+  } catch (error) {
+    console.error('Failed to increment view count:', error);
+  }
 };
 
 const toggleLike = async video => {

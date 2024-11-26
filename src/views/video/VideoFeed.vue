@@ -151,6 +151,7 @@ const setupVideoObserver = () => {
           );
           if (index !== -1) {
             currentVideoIndex.value = index;
+            incrementViewCount(videos.value[index].id);
           }
         } else {
           video.pause();

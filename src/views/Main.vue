@@ -74,8 +74,7 @@
               sm="6"
               lg="3"
             >
-              <v-card class="video-card"
-              @click="goToVideoFeed(video.videoId)">
+              <v-card class="video-card" @click="goToVideoFeed(video.videoId)">
                 <v-img
                   :src="video.thumbnailUrl || '/api/placeholder/400/250'"
                   height="200"
@@ -120,7 +119,8 @@
       <v-btn
         v-for="menu in mobileMenuItems"
         :key="menu.title"
-        :value="menu.route"
+        :to="menu.route"
+        @click="menu.action && menu.action()"
       >
         <v-icon>{{ menu.icon }}</v-icon>
         {{ menu.title }}
@@ -138,11 +138,11 @@ import VideoService from '../services/video';
 const router = useRouter();
 const activeTab = ref('home');
 const videos = ref([]);
-const goToVideoFeed = (videoId) => {
-  console.log('라우터 videoID : ' + videoId)
+const goToVideoFeed = videoId => {
+  console.log('라우터 videoID : ' + videoId);
   router.push({
     name: 'videos',
-    query: { initialVideoId: videoId, sortBy: selectedSort.value }
+    query: { initialVideoId: videoId, sortBy: selectedSort.value },
   });
 };
 
@@ -160,7 +160,7 @@ const fetchVideos = async sortby => {
   try {
     const data = await VideoService.getVideos(sortby);
     videos.value = data;
-    console.info(videos.value)
+    console.info(videos.value);
   } catch (error) {
     console.error('Failed to fetch videos:', error);
   }
@@ -199,11 +199,6 @@ const menuItems = ref([
 
 const mobileMenuItems = computed(() => [
   {
-    title: '홈',
-    icon: 'mdi-home',
-    route: '/',
-  },
-  {
     title: '동영상 업로드',
     icon: 'mdi-upload',
     route: '/upload',
@@ -212,6 +207,11 @@ const mobileMenuItems = computed(() => [
     title: '내 동영상',
     icon: 'mdi-video',
     route: '/my-videos',
+  },
+  {
+    title: '로그아웃',
+    icon: 'mdi-logout',
+    action: handleLogout,
   },
 ]);
 
@@ -287,7 +287,7 @@ const handleLogout = async () => {
   cursor: pointer;
   transition: transform 0.2s ease;
   height: 100%;
-  background: #FFF8F0;
+  background: #fff8f0;
   overflow: hidden;
   border: none !important;
   box-shadow: none !important;

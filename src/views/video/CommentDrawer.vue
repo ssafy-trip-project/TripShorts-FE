@@ -79,11 +79,13 @@
 </template>
 
 <script setup>
+import AuthService from '@/services/auth';
 import { onMounted, ref, watch } from 'vue';
 
 const isMobile = ref(window.innerWidth <= 768);
 
 onMounted(() => {
+  console.log(AuthService.getUserInfo());
   window.addEventListener('resize', () => {
     isMobile.value = window.innerWidth <= 768;
   });
