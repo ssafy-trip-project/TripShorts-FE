@@ -359,10 +359,12 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   z-index: 2;
+  pointer-events: none;
 }
 
 .tags-section {
   margin-left: 150px;
+  pointer-events: auto;
 }
 
 .tags-container {
@@ -381,6 +383,7 @@ onUnmounted(() => {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .tag:hover {
@@ -462,6 +465,7 @@ onUnmounted(() => {
 
   .video-overlay {
     padding: 16px;
+    bottom: 100px;
   }
 
   .tag {
