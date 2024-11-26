@@ -23,12 +23,14 @@
               <template v-slot:placeholder>
                 <v-icon size="60" color="#8B4513">mdi-account</v-icon>
               </template>
-              <div class="image-overlay" @click="triggerImageUpload">
+              <!-- my가 true일 때만 이미지 수정 오버레이 표시 -->
+              <div v-if="profileData.my" class="image-overlay" @click="triggerImageUpload">
                 <span class="edit-text">사진 변경</span>
               </div>
             </v-img>
           </v-avatar>
           <input
+            v-if="profileData.my"
             type="file"
             ref="fileInput"
             accept="image/*"
@@ -56,6 +58,7 @@
               hide-details
             ></v-text-field>
             <v-btn
+              v-if="profileData.my"
               icon
               size="x-small"
               class="ml-2"
@@ -112,7 +115,7 @@
 
           <!-- 삭제 버튼 (오른쪽 상단에 고정) -->
           <v-btn
-            v-show="hoveredVideo === video.videoId"
+            v-if="profileData.my && hoveredVideo === video.videoId"
             icon
             size="small"
             variant="text"
@@ -137,12 +140,10 @@
         {{ error }}
       </div>
 
-      <!-- Intersection Observer Target -->
-      <div v-if="hasNext" ref="observerTarget" class="h-4 w-full"></div>
     </div>
 
     <!-- Delete Account Button -->
-    <div class="delete-account-section">
+    <div v-if="profileData.my" class="delete-account-section">
       <v-btn
         color="#8B4513"
         variant="outlined"
@@ -209,11 +210,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { memberService } from '@/services/member';
 import api from '@/api';
 
 const router = useRouter();
+const route = useRoute();
 
 // Profile related refs
 const profileData = ref({
@@ -233,9 +235,6 @@ const hoveredVideo = ref(null);
 const videos = ref([]);
 const isLoading = ref(false);
 const error = ref(null);
-const nextCursor = ref(null);
-const hasNext = ref(false);
-const observerTarget = ref(null);
 const selectedVideo = ref(null);
 const showDeleteModal = ref(false);
 
@@ -247,9 +246,9 @@ const snackbar = ref({
 });
 
 // Profile methods
-const loadProfile = async () => {
+const loadProfile = async (id) => {
   try {
-    const data = await memberService.getMyProfile();
+    const data = await memberService.getMyProfile(id);
     profileData.value = data;
   } catch (error) {
     showError('프로필 정보를 불러오는데 실패했습니다.');
@@ -309,29 +308,20 @@ const deleteAccount = async () => {
 };
 
 // Videos methods
-const fetchVideos = async (cursor = null) => {
+const fetchVideos = async (id) => {
   if (isLoading.value) return;
 
   try {
     isLoading.value = true;
     error.value = null;
 
-    const params = new URLSearchParams();
-    params.append('size', '12');
-    if (cursor) params.append('cursorId', cursor);
+    const url = id ? `/api/v1/shorts/my-videos?id=${id}` : '/api/v1/shorts/my-videos';
+    const response = await api.get(url);
 
-    const response = await api.get(
-      `/api/v1/shorts/my-videos?${params.toString()}`,
-    );
+    videos.value = [...videos.value, ...response.data];
 
-    if (cursor === null) {
-      videos.value = response.data.videos;
-    } else {
-      videos.value = [...videos.value, ...response.data.videos];
-    }
+    console.log(videos.value)
 
-    nextCursor.value = response.data.nextCursor;
-    hasNext.value = response.data.hasNext;
   } catch (e) {
     console.error('Failed to fetch videos:', e);
     error.value = '동영상을 불러오는데 실패했습니다. 다시 시도해주세요.';
@@ -384,27 +374,12 @@ const showError = text => {
   };
 };
 
-// Intersection Observer
-const observer = new IntersectionObserver(
-  entries => {
-    if (entries[0].isIntersecting && hasNext.value && !isLoading.value) {
-      fetchVideos(nextCursor.value);
-    }
-  },
-  { threshold: 0.5 },
-);
 
 onMounted(() => {
-  loadProfile();
-  fetchVideos();
-  if (observerTarget.value) {
-    observer.observe(observerTarget.value);
-  }
+  loadProfile(route.query.id);
+  fetchVideos(route.query.id);
 });
 
-onUnmounted(() => {
-  observer.disconnect();
-});
 </script>
 
 <style scoped>
@@ -740,12 +715,6 @@ onUnmounted(() => {
       background-color: #ff9933;
     }
   }
-}
-
-.observer-target {
-  height: 20px;
-  width: 100%;
-  visibility: hidden;
 }
 
 .divider {
