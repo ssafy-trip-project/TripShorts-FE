@@ -4,8 +4,9 @@ import api from '../api'
 
 export const memberService = {
   // 프로필 정보 조회
-  async getMyProfile() {
-    const response = await api.get(`/my/profile`)
+  async getMyProfile(id) {
+    const url = id ? `/my/profile?id=${id}` : '/my/profile';
+    const response = await api.get(url);
     return response.data
   },
 

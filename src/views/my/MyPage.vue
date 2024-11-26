@@ -23,12 +23,14 @@
               <template v-slot:placeholder>
                 <v-icon size="60" color="#8B4513">mdi-account</v-icon>
               </template>
-              <div class="image-overlay" @click="triggerImageUpload">
+              <!-- my가 true일 때만 이미지 수정 오버레이 표시 -->
+              <div v-if="profileData.my" class="image-overlay" @click="triggerImageUpload">
                 <span class="edit-text">사진 변경</span>
               </div>
             </v-img>
           </v-avatar>
           <input
+            v-if="profileData.my"
             type="file"
             ref="fileInput"
             accept="image/*"
@@ -56,6 +58,7 @@
               hide-details
             ></v-text-field>
             <v-btn
+              v-if="profileData.my"
               icon
               size="x-small"
               class="ml-2"
@@ -112,7 +115,7 @@
 
           <!-- 삭제 버튼 (오른쪽 상단에 고정) -->
           <v-btn
-            v-show="hoveredVideo === video.videoId"
+            v-if="profileData.my && hoveredVideo === video.videoId"
             icon
             size="small"
             variant="text"
@@ -142,7 +145,7 @@
     </div>
 
     <!-- Delete Account Button -->
-    <div class="delete-account-section">
+    <div v-if="profileData.my" class="delete-account-section">
       <v-btn
         color="#8B4513"
         variant="outlined"
@@ -209,11 +212,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { memberService } from '@/services/member';
 import api from '@/api';
 
 const router = useRouter();
+const route = useRoute();
 
 // Profile related refs
 const profileData = ref({
@@ -247,9 +251,9 @@ const snackbar = ref({
 });
 
 // Profile methods
-const loadProfile = async () => {
+const loadProfile = async (id) => {
   try {
-    const data = await memberService.getMyProfile();
+    const data = await memberService.getMyProfile(id);
     profileData.value = data;
   } catch (error) {
     showError('프로필 정보를 불러오는데 실패했습니다.');
@@ -395,7 +399,7 @@ const observer = new IntersectionObserver(
 );
 
 onMounted(() => {
-  loadProfile();
+  loadProfile(route.query.id);
   fetchVideos();
   if (observerTarget.value) {
     observer.observe(observerTarget.value);

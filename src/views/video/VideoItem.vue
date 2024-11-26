@@ -57,7 +57,7 @@
           <!-- 프로필 이미지 영역 -->
           <div 
             class="creator-avatar-wrapper"
-            @click.stop="goToCreatorProfile"
+            @click.stop="goToCreatorProfile(video.creator.id)"
           >
             <img 
               :src="video.creator.imageUrl" 
@@ -70,7 +70,7 @@
           <div class="creator-details">
             <div 
               class="creator-name-wrapper"
-              @click.stop="goToCreatorProfile"
+              @click.stop="goToCreatorProfile(video.creator.id)"
             >
               <span class="creator-name">{{ video.creator.nickname }}</span>
             </div>
@@ -102,8 +102,11 @@ const props = defineProps({
 defineEmits(['video-loaded', 'like-click', 'comment-click', 'details-click']);
 
 // 프로필로 이동하는 함수
-const goToCreatorProfile = () => {
-  router.push('/my-videos');
+const goToCreatorProfile = (id) => {
+  router.push({
+    name: 'MyVideos',
+    query: { id }
+  });
 };
 
 const togglePlay = event => {
