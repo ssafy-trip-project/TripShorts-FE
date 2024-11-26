@@ -72,7 +72,7 @@
               :key="index"
               cols="12"
               sm="6"
-              lg="4"
+              lg="3"
             >
               <v-card class="video-card"
               @click="goToVideoFeed(video.videoId)">
@@ -287,8 +287,10 @@ const handleLogout = async () => {
   cursor: pointer;
   transition: transform 0.2s ease;
   height: 100%;
-  background: white;
+  background: #FFF8F0;
   overflow: hidden;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .video-card:hover {
