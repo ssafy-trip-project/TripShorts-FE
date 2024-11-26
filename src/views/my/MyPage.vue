@@ -2,16 +2,54 @@
   <div class="page-container bg-orange-50">
     <!-- Profile Section -->
     <div class="profile-section">
-      <div class="back-btn-wrapper">
-        <v-btn
-          icon="mdi-arrow-left"
-          size="small"
-          color="#8B4513"
-          variant="text"
-          @click="router.back()"
-        ></v-btn>
+      <div class="header-wrapper">
+        <div class="back-btn-wrapper">
+          <v-btn
+            icon="mdi-arrow-left"
+            size="small"
+            color="#8B4513"
+            variant="text"
+            @click="router.back()"
+          ></v-btn>
+        </div>
+        <!-- TripShorts 로고 추가 -->
+        <div class="profile-logo-container">
+          <svg
+            width="180"
+            height="36"
+            viewBox="0 0 280 50"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <!-- 카메라 그룹 -->
+            <g transform="translate(10, 5) scale(0.9)">
+              <rect x="8" y="14" width="14" height="4" rx="2" fill="#8B4513" />
+              <rect x="4" y="18" width="36" height="28" rx="4" fill="#8B4513" />
+              <rect x="2" y="24" width="6" height="16" rx="2" fill="#8B4513" />
+              <circle cx="22" cy="32" r="12" fill="#FF9933" />
+              <circle cx="22" cy="32" r="8" fill="#8B4513" />
+              <circle cx="22" cy="32" r="6" fill="#FF9933" />
+              <circle cx="34" cy="24" r="3" fill="#FF9933" />
+              <path
+                d="M44 16 C44 16, 50 12, 56 16 L50 40 Z"
+                fill="#FF9933"
+                stroke="#8B4513"
+                stroke-width="1.5"
+              />
+            </g>
+            <text
+              x="90"
+              y="35"
+              font-family="Arial"
+              font-size="32"
+              font-weight="bold"
+              fill="#8B4513"
+            >
+              TripShorts
+            </text>
+          </svg>
+        </div>
       </div>
-
       <div class="profile-content">
         <!-- Profile Image -->
         <div class="profile-image-container">
@@ -322,10 +360,10 @@ const fetchVideos = async id => {
       ? `/api/v1/shorts/my-videos?id=${id}`
       : '/api/v1/shorts/my-videos';
     const response = await api.get(url);
-
+    console.log('response mypage videos: ', response.data);
     videos.value = [...videos.value, ...response.data];
 
-    console.log(videos.value);
+    console.log('mypage videos:', videos.value);
   } catch (e) {
     console.error('Failed to fetch videos:', e);
     error.value = '동영상을 불러오는데 실패했습니다. 다시 시도해주세요.';
@@ -400,10 +438,35 @@ onMounted(() => {
   position: relative;
 }
 
+.header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 2rem;
+  padding-top: 1rem;
+}
+
 .back-btn-wrapper {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.profile-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-logo-container svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: transform 0.2s ease;
+}
+
+.profile-logo-container:hover svg {
+  transform: scale(1.03);
 }
 
 .profile-content {
@@ -668,6 +731,15 @@ onMounted(() => {
   .play-overlay {
     opacity: 1;
     background: rgba(0, 0, 0, 0.1);
+  }
+
+  .profile-logo-container svg {
+    width: 140px;
+    height: 28px;
+  }
+
+  .header-wrapper {
+    margin-bottom: 1.5rem;
   }
 }
 
