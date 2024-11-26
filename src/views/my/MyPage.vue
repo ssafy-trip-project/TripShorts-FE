@@ -397,7 +397,7 @@ onMounted(() => {
 .back-btn-wrapper {
   position: absolute;
   top: 1rem;
-  right: 1rem;
+  left: 1rem;
 }
 
 .profile-content {
