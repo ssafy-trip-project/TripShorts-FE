@@ -140,8 +140,6 @@
         {{ error }}
       </div>
 
-      <!-- Intersection Observer Target -->
-      <div v-if="hasNext" ref="observerTarget" class="h-4 w-full"></div>
     </div>
 
     <!-- Delete Account Button -->
@@ -237,9 +235,6 @@ const hoveredVideo = ref(null);
 const videos = ref([]);
 const isLoading = ref(false);
 const error = ref(null);
-const nextCursor = ref(null);
-const hasNext = ref(false);
-const observerTarget = ref(null);
 const selectedVideo = ref(null);
 const showDeleteModal = ref(false);
 
@@ -313,29 +308,20 @@ const deleteAccount = async () => {
 };
 
 // Videos methods
-const fetchVideos = async (cursor = null) => {
+const fetchVideos = async (id) => {
   if (isLoading.value) return;
 
   try {
     isLoading.value = true;
     error.value = null;
 
-    const params = new URLSearchParams();
-    params.append('size', '12');
-    if (cursor) params.append('cursorId', cursor);
+    const url = id ? `/api/v1/shorts/my-videos?id=${id}` : '/api/v1/shorts/my-videos';
+    const response = await api.get(url);
 
-    const response = await api.get(
-      `/api/v1/shorts/my-videos?${params.toString()}`,
-    );
+    videos.value = [...videos.value, ...response.data];
 
-    if (cursor === null) {
-      videos.value = response.data.videos;
-    } else {
-      videos.value = [...videos.value, ...response.data.videos];
-    }
+    console.log(videos.value)
 
-    nextCursor.value = response.data.nextCursor;
-    hasNext.value = response.data.hasNext;
   } catch (e) {
     console.error('Failed to fetch videos:', e);
     error.value = '동영상을 불러오는데 실패했습니다. 다시 시도해주세요.';
@@ -388,27 +374,12 @@ const showError = text => {
   };
 };
 
-// Intersection Observer
-const observer = new IntersectionObserver(
-  entries => {
-    if (entries[0].isIntersecting && hasNext.value && !isLoading.value) {
-      fetchVideos(nextCursor.value);
-    }
-  },
-  { threshold: 0.5 },
-);
 
 onMounted(() => {
   loadProfile(route.query.id);
-  fetchVideos();
-  if (observerTarget.value) {
-    observer.observe(observerTarget.value);
-  }
+  fetchVideos(route.query.id);
 });
 
-onUnmounted(() => {
-  observer.disconnect();
-});
 </script>
 
 <style scoped>
@@ -744,12 +715,6 @@ onUnmounted(() => {
       background-color: #ff9933;
     }
   }
-}
-
-.observer-target {
-  height: 20px;
-  width: 100%;
-  visibility: hidden;
 }
 
 .divider {
