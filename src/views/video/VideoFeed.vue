@@ -85,6 +85,21 @@ const observers = ref(new Map());
 const isMobile = ref(window.innerWidth <= 768);
 const PRELOAD_THRESHOLD = 2;
 
+const togglePlay = event => {
+  if (event.target.tagName === 'VIDEO') {
+    const video = event.target;
+    if (video.paused) {
+      video.manuallyPaused = false; // 수동 정지 상태 해제
+      video.play().catch(error => {
+        console.log('Video play failed:', error);
+      });
+    } else {
+      video.manuallyPaused = true; // 수동 정지 상태 설정
+      video.pause();
+    }
+  }
+};
+
 // 초기 비디오 ID를 가져오는 함수
 const getInitialVideoIndex = (videos, initialId) => {
   return videos.findIndex(video => video.id === initialId);
@@ -121,18 +136,21 @@ const setupVideoObserver = () => {
     entries => {
       entries.forEach(entry => {
         const video = entry.target;
-        if (entry.isIntersecting) {
+        const videoElement = video.closest('[data-video-id]');
+        if (!videoElement) return;
+
+        if (entry.isIntersecting && !video.manuallyPaused) {
+          // manuallyPaused 체크 추가
           video.play().catch(error => {
             console.log('Video play failed:', error);
           });
 
-          incrementViewCount(video.id);
-
-          // 현재 재생 중인 비디오의 인덱스 업데이트
-          const index = videoRefs.value.findIndex(v => v === video);
+          // 현재 보이는 비디오의 인덱스 업데이트
+          const index = videos.value.findIndex(
+            v => v.id === Number(videoElement.dataset.videoId),
+          );
           if (index !== -1) {
             currentVideoIndex.value = index;
-            checkAndLoadMoreVideos(index);
           }
         } else {
           video.pause();

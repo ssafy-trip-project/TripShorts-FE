@@ -83,9 +83,6 @@ onUnmounted(() => {
         <v-icon size="28">mdi-arrow-left</v-icon>
       </v-btn>
       <span class="nav-title">새로운 게시물</span>
-      <v-btn class="next-btn" @click="registTourInfo" variant="text">
-        다음
-      </v-btn>
     </div>
 
     <div class="content-section">
@@ -110,21 +107,15 @@ onUnmounted(() => {
             @error="e => console.error('Video element error:', e)"
           ></video>
         </div>
+      </div>
 
-        <div class="thumbnail-section" style="margin-bottom: 100px">
-          <span class="thumbnail-title">썸네일 이미지</span>
-          <div class="thumbnail-preview">
-            <img
-              v-if="thumbnailUrl"
-              :src="thumbnailUrl"
-              class="preview-thumbnail"
-              alt="영상 썸네일"
-            />
-          </div>
-          <v-btn class="re-record-btn" @click="reRecord" variant="tonal">
-            다시 촬영
-          </v-btn>
-        </div>
+      <div class="thumbnail-section" style="margin-bottom: 100px">
+        <v-btn class="next-btn" @click="registTourInfo" variant="text">
+          다음
+        </v-btn>
+        <v-btn class="re-record-btn" @click="reRecord" variant="tonal">
+          다시 촬영
+        </v-btn>
       </div>
     </div>
   </div>
@@ -160,14 +151,19 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.next-btn {
-  color: #ffffff !important;
-  font-weight: 500;
-  background: #b15c1b !important;
-  border-radius: 24px;
-  padding: 4px 20px !important;
-  letter-spacing: 0.3px;
+.next-btn,
+.re-record-btn {
   height: 36px !important;
+  min-width: 120px !important; /* 동일한 최소 너비 설정 */
+  width: 120px !important; /* 고정 너비 설정 */
+  background: #b15c1b !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  border-radius: 24px !important;
+  text-align: center !important;
+  transition: all 0.2s ease !important;
+  padding: 4px 20px !important;
 }
 
 .content-section {
@@ -198,11 +194,10 @@ onUnmounted(() => {
 }
 
 .thumbnail-section {
-  padding: 24px 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff8f0;
+  gap: 16px; /* 버튼 사이 간격 */
+  justify-content: center;
+  margin-bottom: 100px;
 }
 
 .thumbnail-title {
@@ -224,18 +219,6 @@ onUnmounted(() => {
   object-fit: cover;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.re-record-btn {
-  height: 36px !important;
-  min-width: 100px !important;
-  background: #b15c1b !important;
-  color: #ffffff !important;
-  font-weight: 500 !important;
-  font-size: 14px;
-  border-radius: 24px !important;
-  text-align: center;
-  transition: all 0.2s ease !important;
 }
 
 .re-record-btn:active {

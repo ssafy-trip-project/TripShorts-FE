@@ -322,10 +322,10 @@ const fetchVideos = async id => {
       ? `/api/v1/shorts/my-videos?id=${id}`
       : '/api/v1/shorts/my-videos';
     const response = await api.get(url);
-
+    console.log('response mypage videos: ', response.data);
     videos.value = [...videos.value, ...response.data];
 
-    console.log(videos.value);
+    console.log('mypage videos:', videos.value);
   } catch (e) {
     console.error('Failed to fetch videos:', e);
     error.value = '동영상을 불러오는데 실패했습니다. 다시 시도해주세요.';

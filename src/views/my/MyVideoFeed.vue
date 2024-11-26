@@ -26,6 +26,21 @@ const isAtEnd = computed(
   () => currentVideoIndex.value === videos.value.length - 1,
 );
 
+const togglePlay = event => {
+  if (event.target.tagName === 'VIDEO') {
+    const video = event.target;
+    if (video.paused) {
+      video.manuallyPaused = false; // 수동 정지 상태 해제
+      video.play().catch(error => {
+        console.log('Video play failed:', error);
+      });
+    } else {
+      video.manuallyPaused = true; // 수동 정지 상태 설정
+      video.pause();
+    }
+  }
+};
+
 // 모든 비디오 로드
 const loadVideos = async () => {
   try {
@@ -85,7 +100,8 @@ const setupVideoObserver = () => {
         const videoElement = video.closest('[data-video-id]');
         if (!videoElement) return;
 
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !video.manuallyPaused) {
+          // manuallyPaused 체크 추가
           video.play().catch(error => {
             console.log('Video play failed:', error);
           });

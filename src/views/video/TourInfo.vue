@@ -7,6 +7,47 @@ import api from '@/api';
 const router = useRouter();
 const videoStore = useVideoStore();
 const isLoading = ref(false);
+const loadingSvg =
+  ref(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 배경 원 -->
+  <circle cx="100" cy="100" r="80" fill="none" stroke="#FFE4B5" stroke-width="4" opacity="0.5"/>
+
+  <!-- 로딩 원 -->
+  <circle cx="100" cy="100" r="80" fill="none" stroke="#B15C1B" stroke-width="6" stroke-linecap="round" stroke-dasharray="50 150">
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      from="0 100 100"
+      to="360 100 100"
+      dur="2s"
+      repeatCount="indefinite"
+    />
+  </circle>
+
+  <!-- 카메라 아이콘 -->
+  <g transform="translate(70, 70)">
+    <path fill="#8B4513" d="M45,15 h-10l-2-4h-6l-2,4h-10c-2.2,0-4,1.8-4,4v20c0,2.2,1.8,4,4,4h30c2.2,0,4-1.8,4-4v-20c0-2.2-1.8-4-4-4z M30,37c-5,0-9-4-9-9s4-9,9-9s9,4,9,9s-4,9-9,9z M30,21c-3.9,0-7,3.1-7,7s3.1,7,7,7s7-3.1,7-7s-3.1-7-7-7z">
+      <animate
+        attributeName="opacity"
+        values="1;0.5;1"
+        dur="2s"
+        repeatCount="indefinite"
+      />
+    </path>
+  </g>
+
+  <!-- 진행 텍스트 -->
+  <text x="100" y="140" text-anchor="middle" fill="#8B4513" font-size="14" font-family="Arial">
+    업로드 중...
+    <animate
+      attributeName="opacity"
+      values="1;0.3;1"
+      dur="1.5s"
+      repeatCount="indefinite"
+    />
+  </text>
+</svg>`);
+const showSuccessModal = ref(false);
 
 // 장소 선택을 위한 상태들
 const areas = ref([]); // 지역 목록
@@ -164,7 +205,7 @@ async function uploadVideo() {
       },
     );
 
-    alert('업로드 성공!');
+    showSuccessModal.value = true;
     videoStore.clearAll();
     router.push('/');
   } catch (error) {
@@ -174,16 +215,29 @@ async function uploadVideo() {
     isLoading.value = false;
   }
 }
+
+const handleSuccessClose = () => {
+  showSuccessModal.value = false;
+  videoStore.clearAll();
+  router.push('/');
+};
 </script>
 
 <template>
   <div class="travel-info-container">
+    <!-- 업로드 중 오버레이 -->
+    <div v-if="isLoading" class="upload-overlay">
+      <div class="upload-animation-container">
+        <!-- SVG 로딩 애니메이션 -->
+        <div class="loading-animation" v-html="loadingSvg"></div>
+      </div>
+    </div>
     <!-- 상단 네비게이션 -->
     <div class="top-nav">
       <v-btn icon class="nav-btn" @click="$router.back()">
         <v-icon size="28">mdi-arrow-left</v-icon>
       </v-btn>
-      <span class="nav-title">공유하기</span>
+      <span class="nav-title">업로드</span>
       <v-btn
         class="post-btn"
         @click="uploadVideo"
@@ -191,7 +245,7 @@ async function uploadVideo() {
         :disabled="isInitialLoading || !selectedLocation"
         variant="text"
       >
-        공유
+        업로드
       </v-btn>
     </div>
 
@@ -265,6 +319,27 @@ async function uploadVideo() {
       </div>
     </div>
   </div>
+
+  <!-- 성공 모달 추가 -->
+  <v-dialog v-model="showSuccessModal" width="300" persistent>
+    <v-card class="success-modal">
+      <v-card-text class="text-center pa-6">
+        <v-icon size="64" color="#B15C1B" class="mb-4">mdi-check-circle</v-icon>
+        <div class="success-title">업로드 완료!</div>
+        <div class="success-text">영상이 성공적으로 업로드되었습니다.</div>
+      </v-card-text>
+      <v-card-actions class="justify-center pb-6">
+        <v-btn
+          color="#B15C1B"
+          variant="flat"
+          @click="handleSuccessClose"
+          class="success-btn"
+        >
+          확인
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>
@@ -460,7 +535,44 @@ async function uploadVideo() {
   flex: 1;
 }
 
+.upload-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 243, 230, 0.9);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.upload-animation-container {
+  width: 240px;
+  height: 240px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-animation {
+  width: 100%;
+  height: 100%;
+}
+
+:deep(.loading-animation) {
+  width: 100%;
+  height: 100%;
+}
+
 @media (max-width: 768px) {
+  .upload-animation-container {
+    width: 200px;
+    height: 200px;
+  }
+
   .content-section {
     padding: 20px 16px;
   }
@@ -475,8 +587,41 @@ async function uploadVideo() {
     margin-bottom: 16px;
   }
 
+  .success-modal {
+    background: #fff8f0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 20px rgba(139, 69, 19, 0.1) !important;
+  }
+
+  .success-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #8b4513;
+    margin-bottom: 8px;
+  }
+
+  .success-text {
+    color: rgba(139, 69, 19, 0.8);
+    font-size: 14px;
+  }
+
+  .success-btn {
+    color: white;
+    font-weight: 600;
+    min-width: 120px;
+    border-radius: 8px;
+  }
+
   :deep(.v-field__input) {
     font-size: 14px !important;
+  }
+
+  :deep(.v-card-text) {
+    padding-bottom: 0 !important;
+  }
+
+  :deep(.v-card-actions) {
+    padding-top: 0 !important;
   }
 
   :deep(.v-label) {
