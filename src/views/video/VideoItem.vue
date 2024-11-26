@@ -54,27 +54,39 @@
     <div class="creator-section">
       <div class="creator-header">
         <div class="creator-info">
-          <img :src="video.creator.imageUrl" class="creator-avatar" />
+          <!-- 프로필 이미지 영역 -->
+          <div 
+            class="creator-avatar-wrapper"
+            @click.stop="goToCreatorProfile"
+          >
+            <img 
+              :src="video.creator.imageUrl" 
+              class="creator-avatar"
+              alt="creator profile"
+            />
+          </div>
+          
+          <!-- 크리에이터 정보 영역 -->
           <div class="creator-details">
-            <span class="creator-name">{{ video.creator.nickname }}</span>
+            <div 
+              class="creator-name-wrapper"
+              @click.stop="goToCreatorProfile"
+            >
+              <span class="creator-name">{{ video.creator.nickname }}</span>
+            </div>
           </div>
         </div>
       </div>
-      <p class="video-description">{{ video.description }}</p>
-      <!-- <div class="music-info">
-        <v-icon :size="isMobile ? 14 : 16" class="music-icon"
-          >mdi-music-note</v-icon
-        >
-        <span class="music-text">{{ video.musicInfo }}</span>
-      </div> -->
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onUnmounted, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 const isMobile = ref(window.innerWidth <= 768);
+const router = useRouter();
 
 onMounted(() => {
   window.addEventListener('resize', () => {
@@ -88,6 +100,11 @@ const props = defineProps({
   },
 });
 defineEmits(['video-loaded', 'like-click', 'comment-click', 'details-click']);
+
+// 프로필로 이동하는 함수
+const goToCreatorProfile = () => {
+  router.push('/my-videos');
+};
 
 const togglePlay = event => {
   const video = event.target;
@@ -213,6 +230,35 @@ const formatNumber = num => {
   height: 48px;
   border-radius: 50%;
   border: 2px solid white;
+  object-fit: cover;
+}
+
+.creator-avatar-wrapper {
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.creator-avatar-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.creator-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.creator-name-wrapper {
+  display: inline-flex; /* flex에서 inline-flex로 변경 */
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  width: fit-content; /* 콘텐츠 크기에 맞춰 너비 조정 */
+  max-width: 100%; /* 부모 요소를 넘지 않도록 제한 */
 }
 
 .creator-name {
@@ -221,24 +267,6 @@ const formatNumber = num => {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.video-description {
-  font-size: 15px;
-  line-height: 1.4;
-  margin: 0 0 8px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.music-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.music-text {
-  font-size: 14px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
 
 @media (max-width: 768px) {
   .action-buttons {

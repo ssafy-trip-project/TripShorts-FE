@@ -1,5 +1,11 @@
 <template>
   <div class="video-feed" ref="feedContainer">
+    <div class="back-button" @click="router.back()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </div>
+
     <div v-if="videos.length === 0" class="empty-state">
       <div class="empty-message">Loading videos...</div>
     </div>
@@ -274,6 +280,15 @@ onUnmounted(() => {
   scroll-snap-type: y mandatory;
   background-color: black;
   -webkit-overflow-scrolling: touch;
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 .empty-state {
@@ -297,6 +312,36 @@ onUnmounted(() => {
   border-radius: 50%;
   border-top-color: #fe2c55;
   animation: spin 0.8s linear infinite;
+}
+
+.back-button {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+@media (max-width: 768px) {
+  .back-button {
+    top: 12px;
+    left: 12px;
+    width: 36px;
+    height: 36px;
+  }
 }
 
 @media (max-width: 768px) {
