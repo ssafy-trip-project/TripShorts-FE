@@ -30,13 +30,19 @@ const isAtEnd = computed(
 const loadVideos = async () => {
   try {
     loading.value = true;
-    const response = await api.get('/api/v1/shorts/my-videos/feed');
+    const targetId = route.query.targetId;
+    const params = {
+      targetId: targetId,
+    };
+    console.log('targetId :::: ', targetId);
+    const response = await api.get('/api/v1/shorts/my-videos/feed', { params });
+
     videos.value = response.data.videos || [];
     console.log('API response: ', response.data);
     // 초기 비디오 ID로 인덱스 설정
     const initialVideoId = Number(route.query.initialVideoId);
     console.log('Initial Video ID:', initialVideoId);
-
+    console.log('videos.value: ', videos.value);
     if (initialVideoId && videos.value.length > 0) {
       const initialIndex = videos.value.findIndex(v => v.id === initialVideoId);
       console.log('Found Index:', initialIndex);

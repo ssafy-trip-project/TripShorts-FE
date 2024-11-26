@@ -1,8 +1,18 @@
 <template>
   <div class="video-feed" ref="feedContainer">
     <div class="back-button" @click="router.back()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M19 12H5M12 19l-7-7 7-7" />
       </svg>
     </div>
 
@@ -10,15 +20,32 @@
       <div class="empty-message">Loading videos...</div>
     </div>
 
-    <VideoItem
+    <div
       v-for="(video, index) in videos"
       :key="video.id"
-      :video="video"
-      @video-loaded="handleVideoLoaded($event, index)"
-      @like-click="toggleLike"
-      @comment-click="openComments"
-      @details-click="openDetails"
-    />
+      class="video-container"
+    >
+      <VideoItem
+        :video="video"
+        :data-video-id="video.id"
+        @video-loaded="handleVideoLoaded($event, index)"
+        @like-click="toggleLike"
+        @comment-click="openComments"
+        @details-click="openDetails"
+      />
+
+      <!-- 비디오별 오버레이 (하단 정보) -->
+      <div class="video-overlay" v-if="video.tags">
+        <!-- 태그 목록 -->
+        <div class="tags-section">
+          <div class="tags-container">
+            <span v-for="tag in video.tags.tags" :key="tag.name" class="tag">
+              #{{ tag.name }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div v-if="loading" class="loading-indicator">
       <div class="spinner"></div>
@@ -72,12 +99,12 @@ const fetchVideos = async (sortBy = 'recent', cursorId = null) => {
 
     const params = {
       sortby: sortBy,
-      cursorid: Number(cursorId) || nextCursor.value
+      cursorid: Number(cursorId) || nextCursor.value,
     };
 
     const response = await api.get('/api/v1/shorts/feed', { params });
     const newVideos = response.data.videos;
-
+    console.log(response.data);
     // 중복 제거 후 추가
     videos.value = [...videos.value, ...newVideos];
     hasNext.value = response.data.hasNext;
@@ -243,7 +270,7 @@ onMounted(async () => {
   const initialVideoId = route.query.initialVideoId;
   const sortBy = route.query.sortBy || 'recent';
 
-  if (initialVideoId) { 
+  if (initialVideoId) {
     await fetchVideos(sortBy, initialVideoId);
   }
 
@@ -287,8 +314,49 @@ onUnmounted(() => {
   }
 
   /* Hide scrollbar for IE, Edge and Firefox */
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.video-container {
+  height: 100vh;
+  position: relative;
+  scroll-snap-align: center;
+}
+
+.video-overlay {
+  position: absolute;
+  bottom: 50px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+
+.tags-section {
+  margin-left: 150px;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.tag {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.tag:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
 .empty-state {
@@ -361,6 +429,15 @@ onUnmounted(() => {
 
   .loading-indicator {
     padding: 16px;
+  }
+
+  .video-overlay {
+    padding: 16px;
+  }
+
+  .tag {
+    font-size: 12px;
+    padding: 4px 10px;
   }
 }
 
