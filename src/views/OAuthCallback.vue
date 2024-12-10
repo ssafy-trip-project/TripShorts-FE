@@ -58,10 +58,7 @@ export default {
 
       // 인증 코드로 토큰 받아오기
       await AuthService.handleKakaoCallback(code);
-
-      // 사용자 정보 가져오기
-      await AuthService.getUserInfo();
-
+      
       // 메인 페이지로 리다이렉트
       this.$router.push('/');
     } catch (error) {
