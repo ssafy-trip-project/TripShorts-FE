@@ -77,12 +77,7 @@ router.beforeEach(async (to, from, next) => {
       next('/login');
       return;
     }
-    try {
-      await AuthService.getUserInfo();
-      next();
-    } catch (error) {
-      next('/login');
-    }
+    next();
   } else {
     next();
   }
