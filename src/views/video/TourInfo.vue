@@ -181,21 +181,15 @@ async function uploadVideo() {
 
     const token = localStorage.getItem('accessToken');
     const getFilePathFromUrl = url => {
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split('/');
-      return pathParts[pathParts.length - 1];
+      return url.split('?')[0];
     };
 
     // Shorts 생성
     await api.post(
       '/api/v1/shorts',
       {
-        videoUrl: `https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${getFilePathFromUrl(
-          videoPresigned.data.presignedUrl,
-        )}`,
-        thumbnailUrl: `https://d3sspkhgtlkiph.cloudfront.net/videos/shorts/${getFilePathFromUrl(
-          thumbnailPresigned.data.presignedUrl,
-        )}`,
+        videoUrl: getFilePathFromUrl(videoPresigned.data.presignedUrl),
+        thumbnailUrl: getFilePathFromUrl(thumbnailPresigned.data.presignedUrl),
         tourId: selectedLocation.value.tourId,
       },
       {
