@@ -1,3 +1,6 @@
+import api from "@/api";
+import router from "@/router";
+
 // src/services/auth.js
 const API_URL = import.meta.env.VITE_API_URL;
 const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
@@ -24,8 +27,7 @@ class AuthService {
   // 카카오 로그인 관련 메서드
   static getKakaoLoginUrl() {
     const scope = 'profile_nickname,profile_image,account_email';
-    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code&scope=${scope}`;
-    return kakaoAuthUrl;
+    return `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code&scope=${scope}`;
   }
 
   static async handleKakaoCallback(code) {
@@ -62,17 +64,9 @@ class AuthService {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/member`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await api.get(`${API_URL}/api/auth/member`);
 
-      if (!response.ok) {
-        throw new Error('Failed to get user info');
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
       console.error('Error fetching user info:', error);
       throw error;
@@ -82,7 +76,7 @@ class AuthService {
   // 로그아웃
   static logout() {
     this.removeTokens();
-    window.location.href = '/login';
+    router.replace('/login');
   }
 }
 
