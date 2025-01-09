@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import VideoItem from './VideoItem.vue';
 import CommentDrawer from './CommentDrawer.vue';
@@ -79,6 +79,7 @@ const comments = ref([]);
 const router = useRouter();
 const route = useRoute();
 const currentVideoIndex = ref(0);
+const initialLoad = ref(true);
 
 // 컴포넌트 범위에서 observers 관리
 const observers = ref(new Map());
@@ -105,25 +106,37 @@ const getInitialVideoIndex = (videos, initialId) => {
   return videos.findIndex(video => video.id === initialId);
 };
 
-// VideoFeed.vue script 부분
 const fetchVideos = async (sortBy = 'recent', cursorId = null) => {
-  if (loading.value) return;
-
   try {
     loading.value = true;
+    console.log('Fetching with sort:', sortBy);
 
     const params = {
       sortby: sortBy,
-      cursorid: Number(cursorId) || nextCursor.value,
+      cursorid: Number(cursorId),
+      size: 5,
     };
 
+    console.log('Request params:', params);
     const response = await api.get('/api/v1/shorts/feed', { params });
-    const newVideos = response.data.videos;
-    console.log(response.data);
-    // 중복 제거 후 추가
-    videos.value = [...videos.value, ...newVideos];
-    hasNext.value = response.data.hasNext;
-    nextCursor.value = response.data.nextCursor;
+    console.log('Response:', response.data);
+
+    // VideoPageResponse 형식으로 받은 데이터를 배열로 변환
+    const pageResponse = response.data;
+    videos.value = [
+      ...pageResponse.previousVideos,
+      pageResponse.currentVideo,
+      ...pageResponse.nextVideos,
+    ];
+
+    // 현재 비디오의 인덱스 찾기 - getInitialVideoIndex 함수 사용
+    if (cursorId) {
+      const selectedIndex = getInitialVideoIndex(videos.value, cursorId);
+      if (selectedIndex !== -1) {
+        currentVideoIndex.value = selectedIndex;
+        initialLoad.value = true; // 초기 로드임을 표시
+      }
+    }
   } catch (error) {
     console.error('Failed to fetch videos:', error);
   } finally {
@@ -140,19 +153,20 @@ const setupVideoObserver = () => {
         if (!videoElement) return;
 
         if (entry.isIntersecting && !video.manuallyPaused) {
-          // manuallyPaused 체크 추가
           video.play().catch(error => {
             console.log('Video play failed:', error);
           });
 
-          // 현재 보이는 비디오의 인덱스 업데이트
-          const index = videos.value.findIndex(
-            v => v.id === Number(videoElement.dataset.videoId),
-          );
-          if (index !== -1) {
-            currentVideoIndex.value = index;
-            incrementViewCount(videos.value[index].id);
-            checkAndLoadMoreVideos(index);
+          // 초기 로드가 끝난 후에만 추가 로드 로직 실행
+          if (!initialLoad.value) {
+            const index = videos.value.findIndex(
+              v => v.id === Number(videoElement.dataset.videoId),
+            );
+            if (index !== -1) {
+              currentVideoIndex.value = index;
+              incrementViewCount(videos.value[index].id);
+              checkAndLoadMoreVideos(index);
+            }
           }
         } else {
           video.pause();
@@ -171,27 +185,84 @@ const handleVideoLoaded = (event, index) => {
   const video = event.target;
   videoRefs.value[index] = video;
 
-  // 비디오 observer가 없으면 새로 생성
   const observer =
     observers.value.get('video-observer') || setupVideoObserver();
-
-  // observer를 Map에 저장
   if (!observers.value.has('video-observer')) {
     observers.value.set('video-observer', observer);
   }
 
-  // 비디오 엘리먼트 observe 시작
+  // 초기 로드인 경우, 선택된 비디오의 인덱스를 찾아서 처리
+  if (initialLoad.value && route.query.initialVideoId) {
+    const selectedIndex = getInitialVideoIndex(
+      videos.value,
+      Number(route.query.initialVideoId),
+    );
+    if (selectedIndex !== -1 && index === selectedIndex) {
+      nextTick(() => {
+        const container = feedContainer.value;
+        if (container) {
+          container.scrollTop = container.clientHeight * selectedIndex;
+          video.play().catch(console.error);
+          // 모든 초기 설정이 끝난 후에 initialLoad를 false로 설정
+          setTimeout(() => {
+            initialLoad.value = false;
+          }, 100);
+        }
+      });
+    }
+  }
+
   observer.observe(video);
 };
 
-// 현재 인덱스를 기준으로 추가 비디오 로드가 필요한지 확인
-const checkAndLoadMoreVideos = async currentIndex => {
-  const remainingVideos = videos.value.length - (currentIndex + 1);
-  console.log(`현재 인덱스: ${currentIndex}, 남은 비디오: ${remainingVideos}`);
+const loadMoreVideos = async (
+  sortBy = 'recent',
+  cursorId = null,
+  direction = 'next',
+) => {
+  try {
+    loading.value = true;
+    console.log(
+      `Loading more videos with sort: ${sortBy}, direction: ${direction}`,
+    );
 
-  if (remainingVideos <= PRELOAD_THRESHOLD && !loading.value && hasNext.value) {
-    console.log('추가 비디오 로드 시작');
-    await fetchVideos(route.query.sortBy || 'recent', nextCursor.value);
+    const params = {
+      sortby: sortBy,
+      cursorid: Number(cursorId),
+      size: 2,
+    };
+
+    console.log('Request params for more videos:', params);
+    const response = await api.get('/api/v1/shorts/feed/next', { params });
+    console.log('Response for more videos:', response.data);
+
+    // 응답이 바로 비디오 배열이므로 직접 배열을 사용
+    if (direction === 'next') {
+      videos.value = [...videos.value, ...response.data];
+    } else {
+      videos.value = [...response.data, ...videos.value];
+    }
+  } catch (error) {
+    console.error('Failed to load more videos:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const checkAndLoadMoreVideos = async currentIndex => {
+  const remainingNext = videos.value.length - (currentIndex + 1);
+  console.log(`현재 인덱스: ${currentIndex}, 남은 비디오: ${remainingNext}`);
+
+  // 초기 로드가 끝난 후에만, 그리고 아래 방향으로만 추가 로드
+  if (
+    !loading.value &&
+    !initialLoad.value &&
+    remainingNext <= PRELOAD_THRESHOLD
+  ) {
+    console.log('다음 비디오 로드 시작');
+    const currentSortBy = route.query.sortBy || 'recent';
+    const lastVideoId = videos.value[videos.value.length - 1].id;
+    await loadMoreVideos(currentSortBy, lastVideoId, 'next');
   }
 };
 
@@ -206,18 +277,15 @@ const incrementViewCount = async videoId => {
 const toggleLike = async video => {
   try {
     if (!video.liked) {
-      // 좋아요 추가
       await api.post(`/api/v1/goods/${video.id}/like`);
       video.liked = true;
       video.likeCount += 1;
     } else {
-      // 좋아요 취소
       await api.delete(`/api/v1/goods/${video.id}/like`);
       video.liked = false;
       video.likeCount -= 1;
     }
   } catch (error) {
-    // 에러 발생 시 상태 롤백
     if (!video.liked) {
       video.likeCount -= 1;
     } else {
@@ -248,7 +316,6 @@ const openComments = async video => {
 const addComment = async content => {
   try {
     const token = localStorage.getItem('accessToken');
-    // 댓글 작성
     await api.post(
       `/api/v1/shorts/${currentVideo.value.id}/comment`,
       { content },
@@ -259,7 +326,6 @@ const addComment = async content => {
       },
     );
 
-    // 댓글 목록 새로 가져오기
     const response = await api.get(
       `/api/v1/shorts/${currentVideo.value.id}/comments`,
     );
@@ -281,14 +347,12 @@ const addComment = async content => {
 
 const openDetails = video => {
   console.log('Opening details for video:', video.id);
-  // TODO: 상세 정보 모달 구현
   router.push({
     name: 'VideoDetail',
     query: { videoId: video.id },
   });
 };
 
-// showComments 상태가 변경될 때 처리
 watch(showComments, newVal => {
   if (!newVal) {
     currentVideo.value = null;
@@ -300,6 +364,7 @@ onMounted(async () => {
   const initialVideoId = route.query.initialVideoId;
   const sortBy = route.query.sortBy || 'recent';
 
+  console.log('Initial mount with sortBy:', sortBy); // 로그 추가
   if (initialVideoId) {
     await fetchVideos(sortBy, initialVideoId);
   }
