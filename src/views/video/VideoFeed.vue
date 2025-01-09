@@ -233,16 +233,14 @@ const loadMoreVideos = async (
     };
 
     console.log('Request params for more videos:', params);
-    const response = await api.get('/api/v1/shorts/feed', { params });
+    const response = await api.get('/api/v1/shorts/feed/next', { params });
     console.log('Response for more videos:', response.data);
 
-    const pageResponse = response.data;
-
-    // 스크롤 방향에 따라 다른 비디오 추가
+    // 응답이 바로 비디오 배열이므로 직접 배열을 사용
     if (direction === 'next') {
-      videos.value = [...videos.value, ...pageResponse.nextVideos];
+      videos.value = [...videos.value, ...response.data];
     } else {
-      videos.value = [...pageResponse.previousVideos, ...videos.value];
+      videos.value = [...response.data, ...videos.value];
     }
   } catch (error) {
     console.error('Failed to load more videos:', error);
