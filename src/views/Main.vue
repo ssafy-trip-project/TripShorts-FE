@@ -7,78 +7,7 @@
           <v-card class="profile-card mb-4" flat>
             <v-card-text class="text-center">
               <!-- TripShorts 로고 추가 -->
-              <div class="logo-container mb-4">
-                <svg
-                  width="280"
-                  height="50"
-                  viewBox="0 0 280 50"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <!-- 카메라 그룹 - 약간 작게 조정 -->
-                  <g transform="translate(10, 5) scale(0.9)">
-                    <!-- 카메라 상단 플래시 부분 -->
-                    <rect
-                      x="8"
-                      y="14"
-                      width="14"
-                      height="4"
-                      rx="2"
-                      fill="#8B4513"
-                    />
-
-                    <!-- 카메라 본체 -->
-                    <rect
-                      x="4"
-                      y="18"
-                      width="36"
-                      height="28"
-                      rx="4"
-                      fill="#8B4513"
-                    />
-
-                    <!-- 카메라 그립 -->
-                    <rect
-                      x="2"
-                      y="24"
-                      width="6"
-                      height="16"
-                      rx="2"
-                      fill="#8B4513"
-                    />
-
-                    <!-- 렌즈 외부 링 -->
-                    <circle cx="22" cy="32" r="12" fill="#FF9933" />
-
-                    <!-- 렌즈 내부 -->
-                    <circle cx="22" cy="32" r="8" fill="#8B4513" />
-                    <circle cx="22" cy="32" r="6" fill="#FF9933" />
-
-                    <!-- 카메라 상단 다이얼 -->
-                    <circle cx="34" cy="24" r="3" fill="#FF9933" />
-
-                    <!-- 위치 핀 -->
-                    <path
-                      d="M44 16 C44 16, 50 12, 56 16 L50 40 Z"
-                      fill="#FF9933"
-                      stroke="#8B4513"
-                      stroke-width="1.5"
-                    />
-                  </g>
-
-                  <!-- 영문 텍스트 - 중앙 정렬 -->
-                  <text
-                    x="90"
-                    y="35"
-                    font-family="Arial"
-                    font-size="32"
-                    font-weight="bold"
-                    fill="#8B4513"
-                  >
-                    TripShorts
-                  </text>
-                </svg>
-              </div>
+              <Logo />
               <div class="user-greeting">
                 <span class="user-name">{{ userInfo.nickname }}</span>
                 <span class="user-greeting-text">님, 환영합니다</span>
@@ -106,7 +35,7 @@
 
               <v-list-item @click="handleLogout" class="menu-item">
                 <template v-slot:prepend>
-                  <div class="menu-icon" v-html="logoutIcon"></div>
+                  <div class="menu-icon" v-html="icons.logout"></div>
                 </template>
                 <v-list-item-title class="menu-text"
                   >로그아웃</v-list-item-title
@@ -165,12 +94,12 @@
                   <div class="d-flex align-center">
                     <!-- 좋아요 수 -->
                     <div class="d-flex align-center me-3">
-                      <div class="stat-icon" v-html="likeIcon"></div>
+                      <div class="stat-icon" v-html="icons.like"></div>
                       <span class="count-text">{{ video.likeCount }}</span>
                     </div>
                     <!-- 조회수 -->
                     <div class="d-flex align-center">
-                      <div class="stat-icon" v-html="viewIcon"></div>
+                      <div class="stat-icon" v-html="icons.view"></div>
                       <span class="count-text">{{ video.viewCount }}</span>
                     </div>
                   </div>
@@ -206,6 +135,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AuthService from '../services/auth';
 import VideoService from '../services/video';
+import { icons } from '@/assets/icons';
+import Logo from '@/components/Logo.vue';
 
 const router = useRouter();
 const activeTab = ref('home');
@@ -248,54 +179,23 @@ const userInfo = ref({
   email: '',
   nickname: '',
 });
-// SVG 아이콘 정의
-const homeIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M9 22V12H15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-const uploadIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-const videoIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M18 8L22 6V18L18 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-const logoutIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-const likeIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="#FF9933" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-const viewIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#8B4513" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="12" cy="12" r="3" stroke="#8B4513" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
 
 // menuItems 업데이트
 const menuItems = ref([
   {
     title: '홈',
-    icon: homeIcon,
+    icon: icons.home,
     route: '/',
     mobileOnly: false,
   },
   {
     title: '동영상 업로드',
-    icon: uploadIcon,
+    icon: icons.upload,
     route: '/upload',
   },
   {
     title: '내 동영상',
-    icon: videoIcon,
+    icon: icons.video,
     route: '/my-videos',
     mobileOnly: false,
   },
@@ -305,19 +205,19 @@ const menuItems = ref([
 const mobileMenuItems = computed(() => [
   {
     title: '동영상 업로드',
-    icon: uploadIcon,
+    icon: icons.upload,
     route: '/upload',
     action: null,
   },
   {
     title: '내 동영상',
-    icon: videoIcon,
+    icon: icons.video,
     route: '/my-videos',
     action: null,
   },
   {
     title: '로그아웃',
-    icon: logoutIcon,
+    icon: icons.logout,
     route: null,
     action: handleLogout,
   },
@@ -471,22 +371,6 @@ const handleLogout = async () => {
   margin-right: 4px;
 }
 
-.logo-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 12px 0;
-}
-
-.logo-container svg {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-  transition: transform 0.2s ease;
-}
-
-.logo-container:hover svg {
-  transform: scale(1.03);
-}
-
 .user-greeting {
   font-size: 0.95rem;
   color: #8b4513;
@@ -516,11 +400,6 @@ const handleLogout = async () => {
 
   .main-container {
     padding-bottom: 80px;
-  }
-
-  .logo-container svg {
-    width: 250px;
-    height: 80px;
   }
 
   .user-greeting {
