@@ -286,10 +286,6 @@ const handleLogout = async () => {
   background-color: rgba(255, 153, 51, 0.1);
 }
 
-.category-chip {
-  font-size: 0.9rem;
-}
-
 .video-card {
   border-radius: 12px;
   cursor: pointer;
@@ -303,12 +299,6 @@ const handleLogout = async () => {
 
 .video-card:hover {
   transform: scale(1.02);
-}
-
-.likes-count {
-  color: #8b4513;
-  font-size: 0.9rem;
-  margin-left: 4px;
 }
 
 .count-text {
