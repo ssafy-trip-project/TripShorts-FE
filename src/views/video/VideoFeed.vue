@@ -233,7 +233,7 @@ const loadMoreVideos = async (
     };
 
     console.log('Request params for more videos:', params);
-    const response = await api.get('/api/v1/shorts/feed/next', { params });
+    const response = await api.get(`/api/v1/shorts/feed/${direction}`, { params });
     console.log('Response for more videos:', response.data);
 
     // 응답이 바로 비디오 배열이므로 직접 배열을 사용
@@ -241,7 +241,20 @@ const loadMoreVideos = async (
       videos.value = [...videos.value, ...response.data];
     } else {
       videos.value = [...response.data, ...videos.value];
+      currentVideoIndex.value += response.data.length; // 기존 인덱스 보정
     }
+
+    // videos 길이가 5보다 크면 비디오 삭제
+    if (videos.value.length > 5) {
+      console.log('현재 비디오 길이 : ', videos.value.length);
+      if(direction === 'next') {
+        videos.value = videos.value.slice(currentVideoIndex.value - 1);
+        currentVideoIndex.value = 1; // 인덱스 보정
+      }else{
+        videos.value = videos.value.slice(0, 5);
+      }
+    }
+
   } catch (error) {
     console.error('Failed to load more videos:', error);
   } finally {
@@ -254,15 +267,20 @@ const checkAndLoadMoreVideos = async currentIndex => {
   console.log(`현재 인덱스: ${currentIndex}, 남은 비디오: ${remainingNext}`);
 
   // 초기 로드가 끝난 후에만, 그리고 아래 방향으로만 추가 로드
-  if (
-    !loading.value &&
-    !initialLoad.value &&
-    remainingNext <= PRELOAD_THRESHOLD
-  ) {
-    console.log('다음 비디오 로드 시작');
+  if (!loading.value && !initialLoad.value) {
     const currentSortBy = route.query.sortBy || 'recent';
-    const lastVideoId = videos.value[videos.value.length - 1].id;
-    await loadMoreVideos(currentSortBy, lastVideoId, 'next');
+
+    if(remainingNext <= PRELOAD_THRESHOLD) {
+      console.log('다음 비디오 로드 시작');
+      const lastVideoId = videos.value[videos.value.length - 1].id;
+      await loadMoreVideos(currentSortBy, lastVideoId, 'next');
+    }
+
+    if(currentIndex === 0) {
+      console.log('이전 비디오 로드 시작');
+      const firstVideoId = videos.value[0].id;
+      await loadMoreVideos(currentSortBy, firstVideoId, 'previous');
+    }
   }
 };
 
