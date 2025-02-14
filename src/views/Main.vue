@@ -145,7 +145,6 @@ const fetchVideos = async sortby => {
   try {
     const data = await VideoService.getVideos(sortby);
     videos.value = data;
-    console.info(videos.value);
   } catch (error) {
     console.error('Failed to fetch videos:', error);
   }
