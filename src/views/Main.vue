@@ -10,12 +10,11 @@
               <Logo />
               <div class="user-greeting">
                 <span class="user-name">{{ userInfo.nickname }}</span>
-                <span class="user-greeting-text">님, 환영합니다</span>
+                <span class="user-greeting-text">님 환영합니다</span>
               </div>
             </v-card-text>
           </v-card>
 
-          <!-- PC에서만 보이는 메뉴 -->
           <v-card class="menu-card d-none d-md-block">
             <v-list>
               <v-list-item
@@ -23,7 +22,6 @@
                 :key="index"
                 :to="menu.route"
                 class="menu-item"
-                v-show="!menu.mobileOnly"
               >
                 <template v-slot:prepend>
                   <div class="menu-icon" v-html="menu.icon"></div>
@@ -111,27 +109,12 @@
       </v-row>
     </v-container>
 
-    <!-- 모바일 하단 네비게이션 -->
-    <v-bottom-navigation
-      v-model="activeTab"
-      color="#FF9933"
-      class="d-md-none mobile-nav"
-    >
-      <v-btn
-        v-for="menu in mobileMenuItems"
-        :key="menu.title"
-        :to="menu.route"
-        @click="menu.action && menu.action()"
-      >
-        <div class="mobile-menu-icon" v-html="menu.icon"></div>
-        {{ menu.title }}
-      </v-btn>
-    </v-bottom-navigation>
+    
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AuthService from '../services/auth';
 import VideoService from '../services/video';
@@ -139,7 +122,6 @@ import { icons } from '@/assets/icons';
 import Logo from '@/components/Logo.vue';
 
 const router = useRouter();
-const activeTab = ref('home');
 const videos = ref([]);
 const goToVideoFeed = videoId => {
   console.log('라우터 videoID : ' + videoId);
@@ -186,7 +168,6 @@ const menuItems = ref([
     title: '홈',
     icon: icons.home,
     route: '/',
-    mobileOnly: false,
   },
   {
     title: '동영상 업로드',
@@ -197,29 +178,6 @@ const menuItems = ref([
     title: '내 동영상',
     icon: icons.video,
     route: '/my-videos',
-    mobileOnly: false,
-  },
-]);
-
-// mobileMenuItems 업데이트
-const mobileMenuItems = computed(() => [
-  {
-    title: '동영상 업로드',
-    icon: icons.upload,
-    route: '/upload',
-    action: null,
-  },
-  {
-    title: '내 동영상',
-    icon: icons.video,
-    route: '/my-videos',
-    action: null,
-  },
-  {
-    title: '로그아웃',
-    icon: icons.logout,
-    route: null,
-    action: handleLogout,
   },
 ]);
 
@@ -313,13 +271,6 @@ const handleLogout = async () => {
   font-weight: 500;
 }
 
-.mobile-nav {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  z-index: 100;
-}
-
 .sort-chip {
   font-size: 0.9rem;
   min-width: 80px;
@@ -337,7 +288,6 @@ const handleLogout = async () => {
 }
 
 .menu-icon,
-.mobile-menu-icon,
 .stat-icon {
   display: inline-flex;
   align-items: center;
@@ -345,8 +295,7 @@ const handleLogout = async () => {
   margin-right: 10px;
 }
 
-.menu-icon :deep(svg),
-.mobile-menu-icon :deep(svg) {
+.menu-icon :deep(svg) {
   color: #8b4513;
   transition: all 0.2s ease;
 }
