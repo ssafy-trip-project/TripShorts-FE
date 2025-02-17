@@ -46,7 +46,7 @@
         <!-- 콘텐츠 영역 -->
         <v-col cols="12" md="9">
           <!-- 정렬 옵션 -->
-          <v-row class="mb-4">
+          <v-row class="mb-4 sort-bar">
             <v-col cols="12" class="d-flex justify-center">
               <v-chip-group
                 v-model="selectedSort"
@@ -219,8 +219,7 @@ const handleLogout = async () => {
 
 .user-name {
   color: #8b4513;
-  font-size: 1.3rem;
-  font-weight: 500;
+  font-weight: bold;
 }
 
 .menu-card {
@@ -323,25 +322,23 @@ const handleLogout = async () => {
 }
 
 .user-name {
-  font-weight: 600;
-  color: #ff9933;
+  color: #8b4513;
 }
 
 .user-greeting-text {
   color: #8b4513;
 }
 
-@media (max-width: 960px) {
-  .user-name {
-    font-size: 1.1rem;
-  }
-
-  .main-container {
-    padding-bottom: 80px;
-  }
-
-  .user-greeting {
-    font-size: 0.9rem;
-  }
+.text-center {
+  padding: 0;
 }
+
+.v-chip {
+  border-radius: 12px;
+}
+
+.sort-bar {
+  margin-top: 10px;
+}
+
 </style>

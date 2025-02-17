@@ -8,7 +8,7 @@
         xmlns="http://www.w3.org/2000/svg"
       >
         <!-- 카메라 그룹 - 약간 작게 조정 -->
-        <g transform="translate(10, 5) scale(0.9)">
+        <g transform="translate(10, 2) scale(0.9)">
           <!-- 카메라 상단 플래시 부분 -->
           <rect
             x="8"
@@ -46,8 +46,8 @@
         </g>
         <!-- 영문 텍스트 - 중앙 정렬 -->
         <text
-          x="90"
-          y="35"
+          x="60"
+          y="40"
           font-family="Arial"
           font-size="32"
           font-weight="bold"
@@ -70,16 +70,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 12px 0;
   }
-  
-  .logo-container svg {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-    transition: transform 0.2s ease;
-  }
-  
-  .logo-container:hover svg {
-    transform: scale(1.03);
-  }
+
   </style>
   
