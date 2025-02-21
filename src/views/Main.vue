@@ -8,10 +8,6 @@
             <v-card-text class="text-center">
               <!-- TripShorts 로고 추가 -->
               <Logo />
-              <div class="user-greeting">
-                <span class="user-name">{{ userInfo.nickname }}</span>
-                <span class="user-greeting-text">님 환영합니다</span>
-              </div>
             </v-card-text>
           </v-card>
 
@@ -207,14 +203,10 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
-.main-container {
-  background-color: #fff8f0;
-  min-height: 100vh;
-  padding-bottom: 56px; /* 모바일 하단 네비게이션 높이만큼 패딩 */
-}
 
 .profile-card {
   background: transparent;
+  min-height: 120px;
 }
 
 .user-name {
@@ -339,6 +331,7 @@ const handleLogout = async () => {
 
 .sort-bar {
   margin-top: 10px;
+  min-height: 120px;
 }
 
 </style>
