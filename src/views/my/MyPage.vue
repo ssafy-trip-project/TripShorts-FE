@@ -2,52 +2,8 @@
   <div class="page-container bg-orange-50">
     <!-- Profile Section -->
     <div class="profile-section">
-      <div class="header-wrapper">
         <div class="back-btn-wrapper">
-          <v-btn
-            icon="mdi-arrow-left"
-            size="small"
-            color="#8B4513"
-            variant="text"
-            @click="router.back()"
-          ></v-btn>
-        </div>
-        <!-- TripShorts 로고 추가 -->
-        <div class="profile-logo-container">
-          <svg
-            width="180"
-            height="36"
-            viewBox="0 0 280 50"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <!-- 카메라 그룹 -->
-            <g transform="translate(10, 5) scale(0.9)">
-              <rect x="8" y="14" width="14" height="4" rx="2" fill="#8B4513" />
-              <rect x="4" y="18" width="36" height="28" rx="4" fill="#8B4513" />
-              <rect x="2" y="24" width="6" height="16" rx="2" fill="#8B4513" />
-              <circle cx="22" cy="32" r="12" fill="#FF9933" />
-              <circle cx="22" cy="32" r="8" fill="#8B4513" />
-              <circle cx="22" cy="32" r="6" fill="#FF9933" />
-              <circle cx="34" cy="24" r="3" fill="#FF9933" />
-              <path
-                d="M44 16 C44 16, 50 12, 56 16 L50 40 Z"
-                fill="#FF9933"
-                stroke="#8B4513"
-                stroke-width="1.5"
-              />
-            </g>
-            <text
-              x="90"
-              y="35"
-              font-family="Arial"
-              font-size="32"
-              font-weight="bold"
-              fill="#8B4513"
-            >
-              TripShorts
-            </text>
-          </svg>
+          <Logo @click="router.back()"/>
         </div>
       </div>
       <div class="profile-content">
@@ -110,7 +66,7 @@
               "
               :loading="updatingNickname"
             >
-              <v-icon size="16">{{
+              <v-icon size="14">{{
                 isEditingNickname ? 'mdi-check' : 'mdi-pencil'
               }}</v-icon>
             </v-btn>
@@ -126,7 +82,6 @@
           <div class="text-brown-lighter text-sm">게시물</div>
         </div>
       </div>
-    </div>
 
     <div class="divider"></div>
 
@@ -253,6 +208,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { memberService } from '@/services/member';
+import Logo from '@/components/Logo.vue';
 import api from '@/api';
 
 const router = useRouter();
@@ -428,7 +384,6 @@ onMounted(() => {
 
 <style scoped>
 .page-container {
-  background-color: #fff8f0;
   min-height: 100vh;
   width: 100%;
 }
@@ -530,14 +485,12 @@ onMounted(() => {
 
 .videos-section {
   padding: 2rem;
-  background-color: #fff8f0;
 }
 
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  background-color: #fff8f0;
   padding: 0;
   margin: 0 auto;
   max-width: 900px;
@@ -701,45 +654,6 @@ onMounted(() => {
   .back-btn-wrapper {
     top: 0.5rem;
     right: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .posts-grid {
-    grid-template-columns: repeat(2, 1fr); /* 모바일에서도 2열 유지 */
-    gap: 8px;
-    max-width: 100%;
-  }
-
-  .profile-content {
-    gap: 0.5rem;
-  }
-
-  .delete-account-section {
-    padding: 1rem;
-    margin-top: 1rem;
-  }
-
-  /* 모바일에서는 삭제 버튼 항상 표시 */
-  .delete-button {
-    display: block !important;
-    opacity: 1;
-    background: rgba(0, 0, 0, 0.4) !important;
-  }
-
-  /* 모바일에서는 재생 오버레이 항상 표시 */
-  .play-overlay {
-    opacity: 1;
-    background: rgba(0, 0, 0, 0.1);
-  }
-
-  .profile-logo-container svg {
-    width: 140px;
-    height: 28px;
-  }
-
-  .header-wrapper {
-    margin-bottom: 1.5rem;
   }
 }
 

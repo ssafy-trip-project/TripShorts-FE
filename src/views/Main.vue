@@ -3,7 +3,7 @@
     <v-container fluid class="pa-0">
       <!-- 상단 프로필 영역 -->
       <v-row justify="center" class="px-4 py-2">
-        <v-col cols="12" md="3">
+        <v-col cols="12" md="2">
           <v-card class="profile-card mb-4" flat>
             <v-card-text class="text-center">
               <!-- TripShorts 로고 추가 -->
@@ -40,10 +40,10 @@
         </v-col>
 
         <!-- 콘텐츠 영역 -->
-        <v-col cols="12" md="9">
+        <v-col cols="12" md="10">
           <!-- 정렬 옵션 -->
           <v-row class="mb-4 sort-bar">
-            <v-col cols="12" class="d-flex justify-center">
+            <v-col cols="12" class="select-container d-flex justify-center">
               <v-chip-group
                 v-model="selectedSort"
                 selected-class="selected-sort"
@@ -206,7 +206,7 @@ const handleLogout = async () => {
 
 .profile-card {
   background: transparent;
-  min-height: 120px;
+  min-height: 80px;
 }
 
 .user-name {
@@ -331,7 +331,11 @@ const handleLogout = async () => {
 
 .sort-bar {
   margin-top: 10px;
-  min-height: 120px;
+  min-height: 80px;
+}
+
+.select-container {
+  padding-top: 0px;
 }
 
 </style>
