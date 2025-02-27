@@ -153,70 +153,31 @@ async function uploadVideo() {
 
   try {
     isLoading.value = true;
+    
+    const formData = new FormData();
 
-    // ✅ Presigned URLs 한 번만 요청
-    const { data: presignedUrls } = await api.get('/api/v1/shorts/presigned-url', {
-      params: {
-        filenames: ['video.webm', 'thumbnail.jpg'],
-        contentTypes: [videoData.type, 'image/jpeg'],
-      },
-      paramsSerializer: params => {
-        return Object.entries(params)
-          .map(([key, value]) => value.map(v => `${key}=${encodeURIComponent(v)}`).join('&'))
-          .join('&');
-      },
-    });
+    // ✅ Blob을 File 객체로 변환
+    const videoFile = new File([videoData.blob], `video.${videoData.type.includes('mp4') ? 'mp4' : 'webm'}`, { type: videoData.type });
+    const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' });
 
-    const videoPresigned = presignedUrls.find(file => file.filename.includes('video'));
-    const thumbnailPresigned = presignedUrls.find(file => file.filename.includes('thumbnail'));
+    formData.append('video', videoFile);
+    formData.append('thumbnail', thumbnailFile);
+    formData.append('tourId', selectedLocation.value.tourId.toString());
 
-    if (!videoPresigned || !thumbnailPresigned) {
-      throw new Error('Presigned URL을 가져오지 못했습니다.');
-    }
-
-    // ✅ 파일 업로드 병렬 처리
-    const uploadResults = await Promise.allSettled([
-      api.put(videoPresigned.presignedUrl, videoData.blob, {
-        headers: { 'Content-Type': videoData.type },
-      }),
-      api.put(thumbnailPresigned.presignedUrl, thumbnailBlob, {
-        headers: { 'Content-Type': 'image/jpeg' },
-      }),
-    ]);
-
-    // 실패한 업로드 확인
-    const failedUploads = uploadResults.filter(res => res.status === 'rejected');
-    if (failedUploads.length > 0) {
-      console.error('업로드 실패:', failedUploads);
-      alert('일부 파일 업로드가 실패했습니다.');
-      return;
-    }
     const token = localStorage.getItem('accessToken');
 
-    // ✅ Presigned URL에서 최종 파일 경로 추출
-    const videoUrl = videoPresigned.presignedUrl.split('?')[0];
-    const thumbnailUrl = thumbnailPresigned.presignedUrl.split('?')[0];
-
-    // ✅ Shorts 생성 요청
-    await api.post(
-      '/api/v1/shorts',
-      {
-        videoUrl,
-        thumbnailUrl,
-        tourId: selectedLocation.value.tourId,
+    await api.post('/api/v1/shorts/upload', formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    });
 
     showSuccessModal.value = true;
     videoStore.clearAll();
     router.push('/');
   } catch (error) {
-    console.error('업로드 프로세스 실패:', error);
+    console.error('업로드 실패:', error);
     alert('업로드 중 오류가 발생했습니다.');
   } finally {
     isLoading.value = false;
