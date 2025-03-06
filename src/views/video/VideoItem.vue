@@ -2,7 +2,6 @@
   <div class="video-container">
     <video
       ref="videoRef"
-      :src="video.videoUrl"
       :poster="video.thumbnailUrl"
       :id="video.id"
       class="video-player"
@@ -24,16 +23,16 @@
           :class="{ 'is-liked': video.liked }"
         >
           <div class="action-icon-bg" :class="{ 'liked-bg': video.liked }">
-            <v-icon :size="isMobile ? 24 : 28">{{
-              video.liked ? 'mdi-heart' : 'mdi-heart-outline'
-            }}</v-icon>
+            <v-icon size="28">
+              {{ video.liked ? 'mdi-heart' : 'mdi-heart-outline' }}
+            </v-icon>
           </div>
           <span class="action-count">{{ formatNumber(video.likeCount) }}</span>
         </button>
 
         <button class="action-button" @click="$emit('comment-click', video)">
           <div class="action-icon-bg">
-            <v-icon :size="isMobile ? 24 : 28">mdi-message-outline</v-icon>
+            <v-icon size="28">mdi-message-outline</v-icon>
           </div>
           <span class="action-count">{{
             formatNumber(video.commentCount)
@@ -45,7 +44,7 @@
           @click="$emit('details-click', video)"
         >
           <div class="action-icon-bg">
-            <v-icon :size="isMobile ? 24 : 28">mdi-information-outline</v-icon>
+            <v-icon size="28">mdi-information-outline</v-icon>
           </div>
         </button>
       </div>
@@ -84,15 +83,16 @@
 <script setup>
 import { ref, onUnmounted, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import Hls from 'hls.js';
 
-const isMobile = ref(window.innerWidth <= 768);
-const router = useRouter();
 
 onMounted(() => {
-  window.addEventListener('resize', () => {
-    isMobile.value = window.innerWidth <= 768;
-  });
-});
+  loadHlsVideo();
+})
+
+const router = useRouter();
+const videoRef = ref(null);
+
 const props = defineProps({
   video: {
     type: Object,
@@ -100,6 +100,24 @@ const props = defineProps({
   },
 });
 defineEmits(['video-loaded', 'like-click', 'comment-click', 'details-click']);
+
+// HLS 비디오 로딩 함수
+const loadHlsVideo = () => {
+  const videoElement = videoRef.value;
+  if (!videoElement) return;
+
+  if (videoElement.canPlayType("application/vnd.apple.mpegurl")) {
+    // ✅ Safari는 기본적으로 HLS를 지원
+    videoElement.src = props.video.videoUrl;
+  } else if (Hls.isSupported()) {
+    // ✅ HLS.js로 HLS 스트리밍 지원
+    const hls = new Hls();
+    hls.loadSource(props.video.videoUrl);
+    hls.attachMedia(videoElement);
+  } else {
+    console.error("HLS is not supported in this browser.");
+  }
+};
 
 // 프로필로 이동하는 함수
 const goToCreatorProfile = (id) => {
@@ -109,14 +127,16 @@ const goToCreatorProfile = (id) => {
   });
 };
 
-const togglePlay = event => {
-  const video = event.target;
-  if (video.paused) {
-    video.play().catch(error => {
+const togglePlay = () => {
+  const videoElement = videoRef.value;
+  if (!videoElement) return;
+
+  if (videoElement.paused) {
+    videoElement.play().catch(error => {
       console.log('Video play failed:', error);
     });
   } else {
-    video.pause();
+    videoElement.pause();
   }
 };
 
@@ -268,54 +288,5 @@ const formatNumber = num => {
   font-weight: 600;
   font-size: 17px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-
-@media (max-width: 768px) {
-  .action-buttons {
-    right: 8px;
-    bottom: 120px;
-    padding: 8px;
-  }
-
-  .action-button-wrapper {
-    gap: 16px;
-  }
-
-  .action-icon-bg {
-    width: 40px;
-    height: 40px;
-  }
-
-  .action-count {
-    font-size: 12px;
-  }
-
-  .creator-section {
-    left: 12px;
-    bottom: 24px;
-    right: 64px;
-  }
-
-  .creator-avatar {
-    width: 40px;
-    height: 40px;
-  }
-
-  .creator-name {
-    font-size: 15px;
-  }
-
-  .video-description {
-    font-size: 13px;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-  }
-
-  .music-text {
-    font-size: 12px;
-  }
 }
 </style>
