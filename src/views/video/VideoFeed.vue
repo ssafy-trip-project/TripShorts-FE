@@ -69,10 +69,7 @@ import api from '@/api';
 // ref 정의
 const videos = ref([]);
 const loading = ref(false);
-const nextCursor = ref(null);
-const hasNext = ref(true);
 const feedContainer = ref(null);
-const videoRefs = ref([]);
 const showComments = ref(false);
 const currentVideo = ref(null);
 const comments = ref([]);
@@ -83,30 +80,14 @@ const initialLoad = ref(true);
 
 // 컴포넌트 범위에서 observers 관리
 const observers = ref(new Map());
-const isMobile = ref(window.innerWidth <= 768);
 const PRELOAD_THRESHOLD = 2;
-
-const togglePlay = event => {
-  if (event.target.tagName === 'VIDEO') {
-    const video = event.target;
-    if (video.paused) {
-      video.manuallyPaused = false; // 수동 정지 상태 해제
-      video.play().catch(error => {
-        console.log('Video play failed:', error);
-      });
-    } else {
-      video.manuallyPaused = true; // 수동 정지 상태 설정
-      video.pause();
-    }
-  }
-};
 
 // 초기 비디오 ID를 가져오는 함수
 const getInitialVideoIndex = (videos, initialId) => {
   return videos.findIndex(video => video.id === initialId);
 };
 
-const fetchVideos = async (sortBy = 'recent', cursorId = null) => {
+const fetchVideos = async (sortBy = 'recent', cursorId) => {
   try {
     loading.value = true;
     console.log('Fetching with sort:', sortBy);
@@ -116,27 +97,16 @@ const fetchVideos = async (sortBy = 'recent', cursorId = null) => {
       cursorid: Number(cursorId),
       size: 5,
     };
-
-    console.log('Request params:', params);
     const response = await api.get('/api/v1/shorts/feed', { params });
-    console.log('Response:', response.data);
 
-    // VideoPageResponse 형식으로 받은 데이터를 배열로 변환
-    const pageResponse = response.data;
     videos.value = [
-      ...pageResponse.previousVideos,
-      pageResponse.currentVideo,
-      ...pageResponse.nextVideos,
+      ...response.data.previousVideos,
+      response.data.currentVideo,
+      ...response.data.nextVideos,
     ];
 
-    // 현재 비디오의 인덱스 찾기 - getInitialVideoIndex 함수 사용
-    if (cursorId) {
-      const selectedIndex = getInitialVideoIndex(videos.value, cursorId);
-      if (selectedIndex !== -1) {
-        currentVideoIndex.value = selectedIndex;
-        initialLoad.value = true; // 초기 로드임을 표시
-      }
-    }
+    currentVideoIndex.value = videos.value.length - 3;
+    initialLoad.value = true;
   } catch (error) {
     console.error('Failed to fetch videos:', error);
   } finally {
@@ -152,7 +122,7 @@ const setupVideoObserver = () => {
         const videoElement = video.closest('[data-video-id]');
         if (!videoElement) return;
 
-        if (entry.isIntersecting && !video.manuallyPaused) {
+        if (entry.isIntersecting) {
           video.play().catch(error => {
             console.log('Video play failed:', error);
           });
@@ -164,10 +134,12 @@ const setupVideoObserver = () => {
             );
             if (index !== -1) {
               currentVideoIndex.value = index;
-              incrementViewCount(videos.value[index].id);
               checkAndLoadMoreVideos(index);
             }
           }
+
+          // 조회 카운트 증가
+          incrementViewCount(videos.value[currentVideoIndex.value].id);
         } else {
           video.pause();
         }
@@ -183,10 +155,8 @@ const setupVideoObserver = () => {
 const handleVideoLoaded = (event, index) => {
   console.log(`Video ${index} loaded`);
   const video = event.target;
-  videoRefs.value[index] = video;
 
-  const observer =
-    observers.value.get('video-observer') || setupVideoObserver();
+  const observer = observers.value.get('video-observer') || setupVideoObserver();
   if (!observers.value.has('video-observer')) {
     observers.value.set('video-observer', observer);
   }
@@ -392,10 +362,6 @@ onMounted(async () => {
       showComments.value = false;
     }
   });
-
-  window.addEventListener('resize', () => {
-    isMobile.value = window.innerWidth <= 768;
-  });
 });
 
 onUnmounted(() => {
@@ -406,9 +372,6 @@ onUnmounted(() => {
     if (e.key === 'Escape' && showComments.value) {
       showComments.value = false;
     }
-  });
-  window.removeEventListener('resize', () => {
-    isMobile.value = window.innerWidth <= 768;
   });
 });
 </script>

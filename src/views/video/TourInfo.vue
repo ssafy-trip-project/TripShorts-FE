@@ -156,7 +156,7 @@ async function uploadVideo() {
     
     const formData = new FormData();
 
-    // ✅ Blob을 File 객체로 변환
+    // Blob을 File 객체로 변환
     const videoFile = new File([videoData.blob], `video.${videoData.type.includes('mp4') ? 'mp4' : 'webm'}`, { type: videoData.type });
     const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' });
 

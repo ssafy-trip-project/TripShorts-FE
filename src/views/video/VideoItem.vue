@@ -1,15 +1,16 @@
 <template>
   <div class="video-container">
     <video
-      ref="videoRef"
+      ref="videoPlayer"
       :poster="video.thumbnailUrl"
       :id="video.id"
-      class="video-player"
-      loop
-      muted
+      class="video-js vjs-default-skin"
+      autoplay
       playsinline
       @click="togglePlay"
       @loadeddata="$emit('video-loaded', $event)"
+      muted
+      loop
     ></video>
 
     <div class="gradient-overlay-top"></div>
@@ -81,17 +82,13 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted, onMounted } from 'vue';
+import { ref, onUnmounted, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import Hls from 'hls.js';
+import videojs from "video.js";
+import "video.js/dist/video-js.css";
 
-
-onMounted(() => {
-  loadHlsVideo();
-})
-
-const router = useRouter();
-const videoRef = ref(null);
+const videoPlayer = ref(null);
+let player = null;
 
 const props = defineProps({
   video: {
@@ -99,25 +96,51 @@ const props = defineProps({
     required: true,
   },
 });
-defineEmits(['video-loaded', 'like-click', 'comment-click', 'details-click']);
 
-// HLS 비디오 로딩 함수
-const loadHlsVideo = () => {
-  const videoElement = videoRef.value;
-  if (!videoElement) return;
+onMounted(() => {
+  player = videojs(videoPlayer.value, {
+    controls: false,
+    autoplay: true,
+    responsive: true,
+    fluid: true,
+  });
 
-  if (videoElement.canPlayType("application/vnd.apple.mpegurl")) {
-    // ✅ Safari는 기본적으로 HLS를 지원
-    videoElement.src = props.video.videoUrl;
-  } else if (Hls.isSupported()) {
-    // ✅ HLS.js로 HLS 스트리밍 지원
-    const hls = new Hls();
-    hls.loadSource(props.video.videoUrl);
-    hls.attachMedia(videoElement);
-  } else {
-    console.error("HLS is not supported in this browser.");
+  // HLS Master Playlist(.m3u8) URL 로드
+  player.src({
+    src: props.video.videoUrl, // Master Playlist URL
+    type: "application/x-mpegURL",
+  });
+
+  player.on("error", () => {
+    console.error("비디오 로드 중 오류 발생");
+  });
+
+  // 현재 사용 중인 해상도 정보 로그 출력
+  player.on("resolutionchange", () => {
+    console.log("현재 해상도:", player.videoWidth(), "x", player.videoHeight());
+  });
+
+  // loadHlsVideo();
+})
+
+// 비디오가 변경되면 새로운 소스 적용
+watch(() => props.video.videoUrl, (newUrl, oldUrl) => {
+  if (newUrl !== oldUrl) {
+    player.src({ src: newUrl, type: "application/x-mpegURL" });
+    player.load();
   }
-};
+});
+
+// 컴포넌트 언마운트 시 player 제거
+onUnmounted(() => {
+  if (player) {
+    player.dispose();
+  }
+});
+
+const router = useRouter();
+
+defineEmits(['video-loaded', 'like-click', 'comment-click', 'details-click']);
 
 // 프로필로 이동하는 함수
 const goToCreatorProfile = (id) => {
@@ -128,7 +151,7 @@ const goToCreatorProfile = (id) => {
 };
 
 const togglePlay = () => {
-  const videoElement = videoRef.value;
+  const videoElement = videoPlayer.value;
   if (!videoElement) return;
 
   if (videoElement.paused) {
